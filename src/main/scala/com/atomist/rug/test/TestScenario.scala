@@ -50,7 +50,6 @@ case class TestScenario(
 
   def identifierMap(backingArchive: ArtifactSource): Map[String, Object] = {
     val context = null
-    val project = input(backingArchive)
     buildIdentifierMap(backingArchive, args)
   }
 
@@ -59,6 +58,7 @@ case class TestScenario(
     * @return ArtifactSource created from given block
     */
   def input(testBacking: ArtifactSource): ArtifactSource = {
+    println(givenFiles)
     val executeAgainst = new SimpleFileBasedArtifactSource("test target",
       givenFiles.fileSpecs.flatMap(_.toFiles(testBacking)))
     executeAgainst
@@ -96,13 +96,14 @@ case class InlineFileSpec(path: String, content: String) extends FileSpec {
 
 case class LoadedFileSpec(path: String, pathInTestResources: String) extends FileSpec {
 
-  override def toFiles(testBacking: ArtifactSource) =
-    Seq(testBacking
+  override def toFiles(testBacking: ArtifactSource) = {
+    val foundFile = testBacking
       .findFile(pathInTestResources)
-      .map(_.withPath(path))
-      .getOrElse(
-        throw new IllegalStateException(s"Invalid test: Cannot load test backing file '$pathInTestResources'")
-      ))
+
+    val relocatedFile = foundFile.map(_.withPath(path))
+
+    Seq(relocatedFile.get)
+  }
 }
 
 /**

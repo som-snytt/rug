@@ -67,13 +67,25 @@ class TestRunner(executionLog: ExecutionLog = ConsoleExecutionLog) {
            context: Seq[ProjectOperation],
            namespace: Option[String] = None): TestReport = {
     val executedTests = testPrograms.map(test => {
+
+      val givenTestResources = if (test.givenInvocations.nonEmpty) {
+        resolve(test.givenInvocations.head.name, namespace, context, test.imports) match {
+          case Some(gen: ProjectGenerator) =>
+            val poa: ProjectOperationArguments = test.args
+
+            gen.generate(test.givenInvocations.head.name, poa)
+        }
+      } else {
+        test.input(testResources)
+      }
+
       resolve(test.testedOperation, namespace, context, test.imports) match {
         case None =>
           ExecutedTest.failure(test.name,
             s"Scenario '${test.name}' tests editor '${test.testedOperation}', which was not found. \n" +
               s"Known operations are [${context.map(op => op.name).mkString(",")}]", EmptyTestEventLog)
         case Some(ed: ProjectEditor) =>
-          executeAgainst(test, ed, testResources)
+          executeAgainst(test, ed, givenTestResources)
         case Some(gen: ProjectGenerator) =>
           executeGenerator(test, gen)
       }
@@ -82,12 +94,12 @@ class TestRunner(executionLog: ExecutionLog = ConsoleExecutionLog) {
   }
 
 
-  private def executeAgainst(test: TestScenario, ed: ProjectEditor, testResources: ArtifactSource): ExecutedTest = {
+  private def executeAgainst(test: TestScenario, ed: ProjectEditor, input: ArtifactSource): ExecutedTest = {
     val eventLog = new TestEventLog
     try {
       // TODO should publish events rather than sysout
       executionLog.log(s"Executing scenario ${test.name}...")
-      val input: ArtifactSource = test.input(testResources)
+
       if (test.debug) {
         eventLog.recordInput(input)
       }
@@ -95,11 +107,7 @@ class TestRunner(executionLog: ExecutionLog = ConsoleExecutionLog) {
       val poa: ProjectOperationArguments = test.args
       eventLog.recordParameters(poa)
 
-      if (test.givenInvocations.nonEmpty) {
-        ??? // not implemented
-      }
-
-      val applicability = ed.applicability(testResources)
+      val applicability = ed.applicability(input)
 
       test.outcome.assertions.toList match {
         case NotApplicableAssertion :: Nil if !applicability.canApply =>
@@ -112,7 +120,7 @@ class TestRunner(executionLog: ExecutionLog = ConsoleExecutionLog) {
           val modificationAttempt = ed.modify(input, poa)
           modificationAttempt match {
             case sm: SuccessfulModification =>
-              verifyOutput(test, testResources, sm.result, eventLog)
+              verifyOutput(test, input, sm.result, eventLog)
             case fm: FailedModificationAttempt =>
               test.outcome.assertions match {
                 case Seq(ShouldFailAssertion) =>

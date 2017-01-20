@@ -71,6 +71,54 @@ class TestRunnerTest extends FlatSpec with Matchers {
 
   }
 
+  it should "test an editor invoked after a generator" in {
+    val theOneFile = StringFileArtifact("happy.txt", "Joy Joy")
+
+    val generator = StringFileArtifact(".atomist/editors/OneFileGenerator.rug",
+      """generator OneFileGenerator
+        |
+        |with Project p
+        |   do eval { print("I am so happy") }
+      """.stripMargin)
+
+    val editor = StringFileArtifact(".atomist/editors/EditWithReality.rug",
+      """editor EditWithReality
+        |
+        |with File when name = "happy.txt"
+        |  do replace "Joy Joy" "Misery Sorrow"
+      """.stripMargin)
+
+    val rugArchive = SimpleFileBasedArtifactSource(theOneFile, generator, editor)
+
+    val operations = new ProjectOperationArchiveReader().findOperations(rugArchive, None, Nil)
+
+    val combinedEditorsAndGenerators = operations.generators ++ operations.editors
+
+    val generatorTest = StringFileArtifact(".atomist/tests/OneFileGenerator.rt",
+      """scenario SomethingIsEditedAfterBeingGenerated
+        |
+        |given
+        |  OneFileGenerator
+        |
+        |when
+        |  EditWithReality
+        |
+        |then
+        |  fileExists "happy.txt"
+        |    and fileContains "happy.txt" "Misery Sorrow"
+      """.stripMargin)
+
+    val parsedTest = RugTestParser.parse(generatorTest)
+    val executedTests = testRunner.run(parsedTest, rugArchive, combinedEditorsAndGenerators)
+
+    executedTests.tests.size should be(1)
+    val testResult = executedTests.tests.head
+    if (!testResult.passed) {
+      println(testResult.toString)
+    }
+    testResult.passed should be(true)
+  }
+
   it should "pass with passing editor and file created inline" in {
     val f = StringFileArtifact("src/main/java/Dog.java", "class Dog {}")
     shouldPass(
