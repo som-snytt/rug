@@ -60,20 +60,19 @@ object TreeNodeOperations {
   /**
     * Get rid of this level, pulling up its children
     *
-    * @param f test for which nodes should be removed
-    * @return new tree
+    * @param shouldFlatten test for which nodes should be removed
+    * @return function from one tree to a partially collapsed tree
     */
-  def collapse(f: ContainerTreeNode => Boolean): TreeOperation = treeOperation {
+  def collapse(shouldFlatten: ContainerTreeNode => Boolean): TreeOperation = treeOperation {
     def filter: NodeTransformer = {
       case ofv: MutableContainerTreeNode =>
-        val pulledUp = ListBuffer.empty[TreeNode]
-        val kids = ofv.childNodes flatMap {
-          case ctn: ContainerTreeNode if f(ctn) =>
+        var pulledUp = ListBuffer.empty[TreeNode]
+        val kids = ofv.childNodes foreach {
+          case ctn: ContainerTreeNode if shouldFlatten(ctn) =>
             pulledUp.appendAll(ctn.childNodes.flatMap(n => filter(n)))
-            None
-          case x => Some(x)
+          case x => pulledUp.append(x)
         }
-        Some(new ViewTree(ofv, kids ++ pulledUp))
+        Some(new ViewTree(ofv, pulledUp))
       case x =>
         Some(x)
     }
@@ -86,6 +85,7 @@ object TreeNodeOperations {
     */
   val Prune: TreeOperation = treeOperation {
     case ofv: ContainerTreeNode if ofv.childNodes.isEmpty =>
+      println(s"Killing empty container ${ofv}")
       None
     case x =>
       Some(x)

@@ -421,11 +421,11 @@ class MatcherMicrogrammarTest extends FlatSpec with Matchers {
     keys.map(k => k.value) should equal(Seq("a,", "b,", "cde,", "f,"))
   }
 
-  it should "handle simple rep with wrap" in pendingUntilFixed {
+  it should "handle simple rep with wrap" in {
     val repTest: Microgrammar = {
       val key: Matcher = Regex("key", "[A-Za-z_]+,")
       val sentence: Matcher = Literal("keys:", Some("prefix")) ~? Wrap(Rep(key, "keys"), "keys")
-      new MatcherMicrogrammar(sentence)
+      new MatcherMicrogrammar(sentence, "keys")
     }
     val input =
       """
@@ -437,9 +437,9 @@ class MatcherMicrogrammarTest extends FlatSpec with Matchers {
     val m = repTest.findMatches(input)
     m.size should be(2)
     val firstMatch = m.head
-//    println(s"First match in its entirely was [${firstMatch.value}]")
-//    println(s"First match=\n${TreeNodeUtils.toShortString(firstMatch)}")
-//    println(s"The child names under firstMatch are ${firstMatch.childNodeNames.mkString(",")}")
+    println(s"First match in its entirely was [${firstMatch.value}]")
+    println(s"First match=\n${TreeNodeUtils.toShortString(firstMatch)}")
+    println(s"The child names under firstMatch are ${firstMatch.childNodeNames.mkString(",")}")
     firstMatch.childrenNamed("keys").size should be(1)
     val keys: Seq[TreeNode] = m.head.childrenNamed("keys").head.asInstanceOf[ContainerTreeNode].childrenNamed("key")
     keys.size should be(4)
