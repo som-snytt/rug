@@ -1,12 +1,13 @@
 package com.atomist.util.lang
 
 import java.util
+import java.util.concurrent.Executors
 
 import com.atomist.project.SimpleProjectOperationArguments
 import com.atomist.project.edit.NoModificationNeeded
 import com.atomist.rug.TestUtils
 import com.atomist.rug.runtime.js.interop.UserModelContext
-import com.atomist.rug.runtime.js.{JavaScriptContext, JavaScriptInvokingProjectEditor, JavaScriptOperationFinder}
+import com.atomist.rug.runtime.js.{JavaScriptContext, JavaScriptProjectEditor, JavaScriptProjectOperationFinder}
 import com.atomist.rug.ts.TypeScriptBuilder
 import com.atomist.source.{FileArtifact, SimpleFileBasedArtifactSource, StringFileArtifact}
 import org.scalatest.{FlatSpec, Matchers}
@@ -234,10 +235,10 @@ class JavaScriptArrayTest extends FlatSpec with Matchers {
       EditorWithFancyListArray))
   }
 
-  private  def invokeAndVerifyConstructed(tsf: FileArtifact): JavaScriptInvokingProjectEditor = {
+  private  def invokeAndVerifyConstructed(tsf: FileArtifact): JavaScriptProjectEditor = {
     val as = TypeScriptBuilder.compileWithModel(SimpleFileBasedArtifactSource(tsf))
 
-    val jsed = JavaScriptOperationFinder.fromJavaScriptArchive(as).head.asInstanceOf[JavaScriptInvokingProjectEditor]
+    val jsed = JavaScriptProjectOperationFinder.fromJavaScriptArchive(as).head.asInstanceOf[JavaScriptProjectEditor]
     assert(jsed.name === "Constructed")
 
     val target = SimpleFileBasedArtifactSource(StringFileArtifact("pom.xml", "nasty stuff"))

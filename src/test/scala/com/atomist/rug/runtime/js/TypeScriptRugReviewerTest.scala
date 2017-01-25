@@ -1,5 +1,7 @@
 package com.atomist.rug.runtime.js
 
+import java.util.concurrent.Executors
+
 import com.atomist.project.review.{ReviewResult, Severity}
 import com.atomist.project.{ProjectOperation, SimpleProjectOperationArguments}
 import com.atomist.rug.TestUtils
@@ -197,7 +199,7 @@ class TypeScriptRugReviewerTest extends FlatSpec with Matchers {
   private  def invokeAndVerifySimple(tsf: FileArtifact, others: Seq[ProjectOperation] = Nil): ReviewResult = {
     val as = TypeScriptBuilder.compileWithModel(SimpleFileBasedArtifactSource(tsf))
 
-    val jsed = JavaScriptOperationFinder.fromJavaScriptArchive(as).head.asInstanceOf[JavaScriptInvokingProjectReviewer]
+    val jsed = JavaScriptProjectOperationFinder.fromJavaScriptArchive(as).head.asInstanceOf[JavaScriptProjectReviewer]
     assert(jsed.name === "Simple")
     jsed.setContext(others)
 
