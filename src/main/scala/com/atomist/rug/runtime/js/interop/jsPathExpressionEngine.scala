@@ -71,10 +71,7 @@ class jsPathExpressionEngine(
       val name = stringProperty(som, "name")
       val grammar = stringProperty(som, "grammar")
       //println(s"Parsing $name=$grammar with ${matcherRegistry}")
-      val parsedMatcher = jsPathExpressionEngine.matcherParser.parseMatcher(name, grammar, matcherRegistry)
-      //println("Parsed matcher=" + parsedMatcher)
-      matcherRegistry += parsedMatcher
-      val mg = new MatcherMicrogrammar(parsedMatcher, name)
+      val mg = MatcherMicrogrammarConstruction.matcherMicrogrammar(name, grammar)
       new MicrogrammarTypeProvider(mg)
     case som: ScriptObjectMirror if hasDefinedProperties(som, "typeName") =>
       // It's a type provider coded in JavaScript

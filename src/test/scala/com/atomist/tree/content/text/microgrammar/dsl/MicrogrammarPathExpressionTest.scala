@@ -10,6 +10,15 @@ import com.atomist.tree.content.text.microgrammar._
 import com.atomist.tree.pathexpression.{PathExpressionEngine, PathExpressionParser}
 import org.scalatest.{FlatSpec, Matchers}
 
+class MicrogrammarPathExpressionTest extends FlatSpec with Matchers {
+
+  it should "Let me write the microgrammar this pretty way" in {
+    val stringRegex = """"[^"]"""" // this is not complete. valid Java string
+    val topLevelGrammar = """MyFunction($nameArg, $reArg)"""
+    val inners = Map("nameArg" -> stringRegex, "reArg" -> stringRegex)
+  }
+}
+
 
 class OptionalFieldMicrogrammarTest extends FlatSpec with Matchers {
 
