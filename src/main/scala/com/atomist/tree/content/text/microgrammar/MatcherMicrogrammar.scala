@@ -4,6 +4,7 @@ import com.atomist.tree.TreeNode
 import com.atomist.tree.content.text.TreeNodeOperations._
 import com.atomist.tree.content.text._
 import com.atomist.tree.content.text.grammar.MatchListener
+import com.atomist.tree.utils.TreeNodeUtils
 
 import scala.collection.mutable.ListBuffer
 
@@ -32,16 +33,19 @@ class MatcherMicrogrammar(val matcher: Matcher, val name: String = "MySpecialMic
 
   private [microgrammar] def outputNode(input: CharSequence)(matchFound: PatternMatch, startOffset: InputPosition = OffsetInputPosition(0)) = {
     val endOffset = startOffset + matchFound.matched.length
-    val matchedNode = matchFound.node match {
+    val children = matchFound.node match {
       case None =>
-        new MicrogrammarNode(name, name, Seq(), startOffset, endOffset)
+        Seq()
       case Some(one: MutableTerminalTreeNode) =>
-        new MicrogrammarNode(name, name, Seq(one), startOffset, endOffset)
+        Seq(one)
       case Some(container: MutableContainerTreeNode) =>
-        new MicrogrammarNode(name, name, container.childNodes, startOffset, endOffset)
+        container.childNodes
     }
+    val matchedNode = new SimpleMutableContainerTreeNode(name, children, startOffset, endOffset, TreeNode.Signal, Set(name, MicrogrammarNode.MicrogrammarNodeType))
+    println("Before padding " + TreeNodeUtils.toShortString(matchedNode))
     matchedNode.pad(input.toString)
-    transform(matchedNode)
+    println("After padding " + TreeNodeUtils.toShortString(matchedNode))
+    matchedNode
   }
 
 
@@ -68,18 +72,6 @@ class MatcherMicrogrammar(val matcher: Matcher, val name: String = "MySpecialMic
 
   override def toString: String = s"MatcherMicrogrammar wrapping [$matcher]"
 
-}
-
-private class MicrogrammarNode(name: String,
-                                typ: String,
-                                fields: Seq[TreeNode],
-                                startPosition: InputPosition,
-                                endPosition: InputPosition)
-  extends SimpleMutableContainerTreeNode(
-    name: String, fields, startPosition, endPosition, significance = TreeNode.Signal) {
-
-  addType(typ)
-  addType(MicrogrammarNode.MicrogrammarNodeType)
 }
 
 object MicrogrammarNode {

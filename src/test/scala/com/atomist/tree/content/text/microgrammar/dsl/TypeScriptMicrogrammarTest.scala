@@ -97,7 +97,7 @@ class TypeScriptMicrogrammarTest extends FlatSpec with Matchers {
       |    description: string = "Uses single microgrammar"
       |
       |    edit(project: Project) {
-      |      let mg = new Microgrammar('method', `public $type:§[A-Za-z0-9]+§`)
+      |      let mg = new Microgrammar('method', `public $type:§[A-Za-z0-9]+§ $fnName:§[A-Za-z0-9]+§ (`)
       |      let eng: PathExpressionEngine = project.context().pathExpressionEngine().addType(mg)
       |
       |      eng.with<any>(project, "//File()/method()", n => {

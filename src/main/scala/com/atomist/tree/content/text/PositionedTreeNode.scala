@@ -9,6 +9,10 @@ trait Positioned {
   def endPosition: InputPosition
 }
 
+trait PositionedContainerTreeNode extends PositionedTreeNode {
+  def copy(children: Seq[PositionedTreeNode]): PositionedContainerTreeNode
+}
+
 /**
   * A TreeNode that knows its position in input.
   */
@@ -32,4 +36,5 @@ trait PositionedTreeNode extends TreeNode with Positioned {
 
   def hasSamePositionAs(that: PositionedTreeNode): Boolean =
     this.startPosition.offset == that.startPosition.offset
+
 }

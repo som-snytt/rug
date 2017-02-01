@@ -1,6 +1,6 @@
 package com.atomist.tree.utils
 
-import com.atomist.tree.content.text.{PositionedMutableContainerTreeNode, PositionedMutableContainerTreeNode$, PositionedTreeNode, ViewTree}
+import com.atomist.tree.content.text._
 import com.atomist.tree.{ContainerTreeNode, TreeNode}
 
 /**
@@ -44,11 +44,11 @@ object TreeNodeUtils {
     def toShortStr(fv: TreeNode, depth: Int, shown: TreeNode => Boolean): String = fv match {
       case vt: ViewTree =>
         val contents = vt.delegate
-        def stillShown(c: TreeNode) = vt.childNodes.contains(c) && shown(c)
-        tabs(depth) + info(vt) + s" because '${vt.description}' around \n" + toShortStr(contents, depth + 1, stillShown)
-      case ctn: ContainerTreeNode =>
-        def star(c: TreeNode) = if (shown(c)) "*" else ""
-        tabs(depth) + info(ctn) + (if (ctn.childNodes.nonEmpty) ":\n" else "") + ctn.childNodes.map(c => star(c) + toShortStr(c, depth + 1, shown)).mkString("\n")
+        def stillShown(c: TreeNode) = vt.fieldValues.contains(c) && shown(c)
+        tabs(depth) + info(vt) + s" becaus'e '${vt.description}' around \n" + toShortStr(contents, depth + 1, stillShown)
+      case ctn: MutableContainerTreeNode =>
+        def star(c: TreeNode) = if (shown(c)) {if(c.significance == TreeNode.Noise) "-" else "*"} else "*"
+        tabs(depth) + info(ctn) + (if (ctn.childNodes.nonEmpty) ":\n" else "") + ctn.fieldValues.map(c => star(c) + toShortStr(c, depth + 1, shown)).mkString("\n")
       case f => tabs(depth) + info(f) + "\n"
     }
 

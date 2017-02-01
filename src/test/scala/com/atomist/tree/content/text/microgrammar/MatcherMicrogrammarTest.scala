@@ -29,16 +29,17 @@ class MatcherMicrogrammarTest extends FlatSpec with Matchers {
   }
 
   it should "parse 1 match of 2 parts in whole string" in {
-    val Right(matches) = aWasaB.strictMatch("Henry was aged 19")
-    matches.count should be(2)
-    matches.childrenNamed("name").head match {
+    val Right(oneMatch) = aWasaB.strictMatch("Henry was aged 19")
+    withClue(TreeNodeUtils.toShortString(oneMatch)) {
+      oneMatch.count should be(2)
+      oneMatch.childrenNamed("name").head match {
       case sm: MutableTerminalTreeNode =>
         sm.value should equal("Henry")
     }
-    matches.childrenNamed("age").head match {
+      oneMatch.childrenNamed("age").head match {
       case sm: MutableTerminalTreeNode =>
         sm.value should equal("19")
-    }
+    }}
   }
 
   /**
@@ -50,22 +51,24 @@ class MatcherMicrogrammarTest extends FlatSpec with Matchers {
     val g = aWasaB
     val input = "Henry was aged 19"
     val Right(matches) = g.strictMatch(input)
-    matches.value should equal(input)
-    matches.count should be >= 2
-    matches.dirty should be(false)
-    matches.childrenNamed("name").head match {
-      case sm: MutableTerminalTreeNode =>
-        sm.value should equal("Henry")
-        sm.update("Dave")
+    withClue(matches) {
+      matches.value should equal(input)
+      matches.count should be >= 2
+      matches.dirty should be(false)
+      matches.childrenNamed("name").head match {
+        case sm: MutableTerminalTreeNode =>
+          sm.value should equal("Henry")
+          sm.update("Dave")
+      }
+      matches.childrenNamed("age").head match {
+        case sm: MutableTerminalTreeNode =>
+          sm.value should equal("19")
+          sm.update("40")
+      }
+      matches.dirty should be(true)
+      val currentContent = matches.value
+      currentContent should be("Dave was aged 40")
     }
-    matches.childrenNamed("age").head match {
-      case sm: MutableTerminalTreeNode =>
-        sm.value should equal("19")
-        sm.update("40")
-    }
-    matches.dirty should be(true)
-    val currentContent = matches.value
-    currentContent should be("Dave was aged 40")
   }
 
   it should "parse 1 match of 2 parts discarding prefix" in {
@@ -158,13 +161,13 @@ class MatcherMicrogrammarTest extends FlatSpec with Matchers {
   //  params : param_def (',' param_def)*;
   //  method : 'def' name=IDENTIFIER LPAREN params? RPAREN ':' type=IDENTIFIER;
   protected def matchScalaMethodHeaderRepsep: Microgrammar = {
-    val identifier = Regex("[a-zA-Z0-9]+", Some("identifier"))
+    val identifier = "[a-zA-Z0-9]+"
     val paramDef = Wrap(
-      identifier.copy(givenName = Some("name")) ~? ":" ~? identifier.copy(givenName = Some("type")),
+      Regex(identifier, Some("name")) ~? ":" ~? Regex(identifier, Some("type")),
       "param_def")
     val params = Repsep(paramDef, ",", "params")
-    val method = "def" ~~ identifier.copy(givenName = Some("name")) ~? "(" ~?
-      Wrap(params, "params") ~? ")" ~? ":" ~? identifier.copy(givenName = Some("type"))
+    val method = "def" ~~ Regex(identifier, Some("name")) ~? "(" ~?
+      Wrap(params, "params") ~? ")" ~? ":" ~? Regex(identifier, Some("type"))
     new MatcherMicrogrammar(method)
   }
 
@@ -178,29 +181,32 @@ class MatcherMicrogrammarTest extends FlatSpec with Matchers {
     if (ml.isDefined) ml.get.matches should equal(1)
     m.size should be(1)
     //println(TreeNodeUtils.toShortString(m.head))
-    m.head.childrenNamed("name").head match {
-      case sm: MutableTerminalTreeNode =>
-        sm.value should equal("bar")
-    }
-    m.head.childrenNamed("type").head match {
-      case sm: MutableTerminalTreeNode =>
-        sm.value should equal("Unit")
-    }
-    val params = m.head.childrenNamed("params")
-    val paramDef1 = params.head.asInstanceOf[ContainerTreeNode].childrenNamed("param_def")
-    paramDef1.size should be(1)
-    paramDef1.head match {
-      case ov: ContainerTreeNode =>
-        ov.childrenNamed("name").toList match {
-          case (fv: TerminalTreeNode) :: Nil =>
-            fv.nodeName should equal("name")
-            fv.value should equal("barParamName")
-        }
-        ov.childrenNamed("type").toList match {
-          case (fv: TerminalTreeNode) :: Nil =>
-            fv.nodeName should equal("type")
-            fv.value should equal("String")
-        }
+
+    withClue(TreeNodeUtils.toShortString(m.head)) {
+      m.head.childrenNamed("name").head match {
+        case sm: MutableTerminalTreeNode =>
+          sm.value should equal("bar")
+      }
+      m.head.childrenNamed("type").head match {
+        case sm: MutableTerminalTreeNode =>
+          sm.value should equal("Unit")
+      }
+      val params = m.head.childrenNamed("params")
+      val paramDef1 = params.head.asInstanceOf[ContainerTreeNode].childrenNamed("param_def")
+      paramDef1.size should be(1)
+      paramDef1.head match {
+        case ov: ContainerTreeNode =>
+          ov.childrenNamed("name").toList match {
+            case (fv: TerminalTreeNode) :: Nil =>
+              fv.nodeName should equal("name")
+              fv.value should equal("barParamName")
+          }
+          ov.childrenNamed("type").toList match {
+            case (fv: TerminalTreeNode) :: Nil =>
+              fv.nodeName should equal("type")
+              fv.value should equal("String")
+          }
+      }
     }
   }
 

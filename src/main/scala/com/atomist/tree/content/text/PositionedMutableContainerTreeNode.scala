@@ -1,7 +1,7 @@
 package com.atomist.tree.content.text
 
 import com.atomist.tree.utils.TreeNodeUtils
-import com.atomist.tree.{MutableTreeNode, PaddingTreeNode, SimpleTerminalTreeNode, TreeNode}
+import com.atomist.tree._
 
 import scala.collection.mutable.ListBuffer
 
@@ -25,7 +25,7 @@ abstract class PositionedMutableContainerTreeNode(val nodeName: String)
 
   override def padded: Boolean = _padded
 
-  final override def childNodes: Seq[TreeNode] = _fieldValues
+  final override def childNodes: Seq[TreeNode] = _fieldValues.filterNot(_.isInstanceOf[PaddingTreeNode])
 
   override def fieldValues: Seq[TreeNode] = _fieldValues
 
@@ -168,6 +168,7 @@ abstract class PositionedMutableContainerTreeNode(val nodeName: String)
   final override def value: String = {
     if (!_padded)
       throw new IllegalStateException(s"Call pad before getting value from $this")
+    println(s"Why yes, my fields are ${_fieldValues}")
     _fieldValues.map(_.value).mkString("")
   }
 
@@ -179,7 +180,43 @@ abstract class PositionedMutableContainerTreeNode(val nodeName: String)
 object PositionedMutableContainerTreeNode {
   type Report = Seq[String]
 
-  def pad(pupae: PositionedTreeNode, initialSource: String, topLevel: Boolean = false): (MutableTreeNode, Report) = {
+  /**
+    * Remove Noise.
+    * Child containers that were created for our parsing convenience are removed; we'll keep their children
+    * Terminals that were created for our parsing convenience are deleted. Their values will become padding.
+    *
+    * @param larvae the starting node
+    * @return
+    */
+  def collapse(larvae: PositionedContainerTreeNode): PositionedTreeNode = {
+    def collapseInternal(pupae: PositionedTreeNode): Seq[PositionedTreeNode] = {
+      def removeNode(tn: TreeNode): Boolean = pupae.significance == TreeNode.Noise
+
+      pupae match {
+        case me: TerminalTreeNode if removeNode(me) => Seq()
+        case me: TerminalTreeNode => Seq(me)
+        case us: PositionedContainerTreeNode if removeNode(us) =>
+          us.childNodes.map(_.asInstanceOf[PositionedTreeNode]).flatMap(collapseInternal)
+        case us: PositionedContainerTreeNode =>
+          val wantedChildren = us.childNodes.map(_.asInstanceOf[PositionedTreeNode]).flatMap(collapseInternal)
+          Seq(us.copy(wantedChildren))
+        /* someday we'll actually split these types. PositionedTreeNodes have positioned children */
+      }
+    }
+
+    larvae.copy(larvae.childNodes.map(_.asInstanceOf[PositionedTreeNode]).flatMap(collapseInternal))
+  }
+
+
+  def pad(larvae: PositionedTreeNode, initialSource: String, topLevel: Boolean = false): (MutableTreeNode, Report) = {
+
+    /*
+     * modern PositionedTreeNodes support collapsing
+     */
+    val pupae = larvae match {
+      case pctn: PositionedContainerTreeNode => collapse(pctn)
+      case _ => larvae
+    }
 
     var report: Seq[String] = Seq()
 
@@ -287,16 +324,134 @@ object PositionedMutableContainerTreeNode {
 class MutableButNotPositionedContainerTreeNode(
                                                 name: String,
                                                 val initialFieldValues: Seq[TreeNode]
-                                              )
-  extends PositionedMutableContainerTreeNode(name) {
+                                              ) extends MutableContainerTreeNode {
 
-  initialFieldValues.foreach(insertFieldCheckingPosition)
-
-  override def childrenNamed(key: String): Seq[TreeNode] = fieldValues.filter(n => n.nodeName.equals(key))
-
-  markPadded()
+// this should have impls
 
   var endPosition: InputPosition = _
 
   var startPosition: InputPosition = _
+
+  private[text] var _fieldValues = ListBuffer.empty[TreeNode]
+
+  final override def childNodes: Seq[TreeNode] = _fieldValues
+
+  override def fieldValues: Seq[TreeNode] = _fieldValues
+
+  override def childNodeNames: Set[String] = _fieldValues.map(f => f.nodeName).toSet
+
+  // TODO is this right
+  override def childNodeTypes: Set[String] = childNodeNames
+
+
+  /**
+    * Replace all the fields of this object with the new fields
+    *
+    * @param newFields fields to replace existing fields with
+    */
+  protected def replaceFields(newFields: Seq[TreeNode]): Unit = {
+    _fieldValues.clear()
+    _fieldValues.appendAll(newFields)
+  }
+
+  /**
+    * This allows parsed fields to be added in any order. Position will be checked
+    * to ensure that they're each added in the right place.
+    */
+  def insertFieldCheckingPosition(newField: TreeNode): Unit = newField match {
+    case np: PositionedTreeNode if np.startPosition != null =>
+      var inserted = false
+      for {
+        existingField <- _fieldValues
+        if !inserted
+      }
+        existingField match {
+          case ep: PositionedTreeNode if ep.startPosition != null && np.startPosition.offset < ep.startPosition.offset =>
+            addFieldBefore(newField, ep)
+            inserted = true
+          case _ =>
+        }
+      if (!inserted)
+        _fieldValues.append(newField)
+    case _ =>
+      appendField(newField)
+  }
+
+  override def appendField(newField: TreeNode): Unit = {
+    _fieldValues.append(newField)
+  }
+
+  def replaceField(old: TreeNode, newFields: TreeNode): Unit = {
+    val index = _fieldValues.indexOf(old)
+    if (index < 0)
+      throw new IllegalArgumentException(s"Can't replace $old as it's not a known field")
+    _fieldValues(index) = newFields
+  }
+
+  def removeField(old: TreeNode): Unit = {
+    _fieldValues -= old
+  }
+
+  /**
+    * Convenience method to add a field just before the last field.
+    * If there are no existing fields, just append it.
+    */
+  def addFieldBeforeLast(newField: TreeNode): Unit = {
+    if (_fieldValues.isEmpty)
+      appendField(newField)
+    else {
+      val lastIndex = _fieldValues.size - 1
+      _fieldValues.insert(lastIndex, newField)
+    }
+  }
+
+  def addFieldBefore(newField: TreeNode, before: TreeNode): Unit = {
+    val idx = _fieldValues.indexOf(before)
+    if (idx < 0)
+      throw new IllegalArgumentException(s"Can't add a field before $before as it's not a known field")
+    _fieldValues.insert(idx, newField)
+  }
+
+  def addFieldAfter(after: TreeNode, newField: TreeNode): Unit = {
+    val idx = _fieldValues.indexOf(after)
+    if (idx < 0)
+      throw new IllegalArgumentException(s"Can't add a field after $after as it's not a known field")
+    if (after == _fieldValues.last)
+      _fieldValues.append(newField)
+    else
+      _fieldValues.insert(idx + 1, newField)
+  }
+
+  def length: Int = endPosition - startPosition
+
+  private var dirtied = false
+
+  override def dirty: Boolean = super.dirty || dirtied
+
+  override def update(to: String): Unit = {
+    replaceFields(Seq(SimpleTerminalTreeNode(nodeName, to)))
+    dirtied = true
+  }
+
+  final override def value: String = {
+    _fieldValues.map(_.value).mkString("")
+  }
+
+  override def toString =
+    s"${getClass.getSimpleName}($nodeName)[$startPosition-$endPosition]: {${childNodes.mkString(",")}}"
+
+  /**
+    * Name of the node. This may vary with individual nodes: For example,
+    * with files. However, node names do not always need to be unique.
+    *
+    * @return name of the individual node
+    */
+  override def nodeName: String = ???
+
+  /**
+    * Children under the given key. May be empty.
+    *
+    * @param key field name
+    */
+  override def childrenNamed(key: String): Seq[TreeNode] = ???
 }

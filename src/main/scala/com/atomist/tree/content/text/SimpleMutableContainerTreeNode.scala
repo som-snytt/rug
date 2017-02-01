@@ -3,20 +3,23 @@ package com.atomist.tree.content.text
 import com.atomist.tree.TreeNode
 import com.atomist.tree.TreeNode.Significance
 
-class SimpleMutableContainerTreeNode(
+final class SimpleMutableContainerTreeNode(
                                       name: String,
                                       val initialFieldValues: Seq[TreeNode],
                                       val startPosition: InputPosition,
                                       val endPosition: InputPosition,
                                       override val significance: Significance = TreeNode.Noise,
                                       val additionalTypes: Set[String] = Set())
-  extends PositionedMutableContainerTreeNode(name) {
+  extends PositionedMutableContainerTreeNode(name) with PositionedContainerTreeNode {
 
   additionalTypes.foreach(addType)
 
   initialFieldValues.foreach(insertFieldCheckingPosition)
 
   override def childrenNamed(key: String): Seq[TreeNode] = fieldValues.filter(n => n.nodeName.equals(key))
+
+  override def copy(children: Seq[PositionedTreeNode]): PositionedContainerTreeNode =
+    new SimpleMutableContainerTreeNode(name, children, startPosition, endPosition, significance, additionalTypes)
 
 }
 

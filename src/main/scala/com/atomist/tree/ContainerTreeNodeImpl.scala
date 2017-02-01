@@ -2,6 +2,9 @@ package com.atomist.tree
 
 /**
   * Simple implementation of ContainerTreeNode allowing fields to be added
+  *
+  * used only in tests
+  *
   * @param nodeName node name
   * @param nodeTags node type
   */
