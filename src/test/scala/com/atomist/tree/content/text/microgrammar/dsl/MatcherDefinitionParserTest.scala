@@ -53,9 +53,8 @@ class MatcherDefinitionParserTest extends FlatSpec with Matchers {
   it should "accept valid descendant phrase" in {
     val dog = Literal("dog", named = Some("dog"))
     val cat = Literal("cat", named = Some("cat"))
-    val mr = SimpleMatcherRegistry(Seq(dog, cat))
     val validDescendantPhrases = Seq("▶$:cat", "▶$d:dog")
-    for (v <- validDescendantPhrases) mgp.parseMatcher("v", v, mr) match {
+    for (v <- validDescendantPhrases) mgp.parseMatcher("v", v) match {
       case w: Wrap =>
       case _ => fail(s"failed to parse $v")
     }
@@ -64,9 +63,8 @@ class MatcherDefinitionParserTest extends FlatSpec with Matchers {
   it should "accept valid descendant phrase with predicate" in {
     val dog = Literal("dog", named = Some("dog"))
     val cat = Literal("cat", named = Some("Cat"))
-    val mr = SimpleMatcherRegistry(Seq(dog, cat))
     val validDescendantPhrases = Seq("▶$fido:dog[curlyDepth=3]", "▶$felix:Cat[fat=false]")
-    for (v <- validDescendantPhrases) mgp.parseMatcher("v", v, mr) match {
+    for (v <- validDescendantPhrases) mgp.parseMatcher("v", v) match {
       //case Literal(l, None) =>
       case _ =>
     }
@@ -76,10 +74,8 @@ class MatcherDefinitionParserTest extends FlatSpec with Matchers {
     val otherPattern = Literal("x", named = Some("OtherPattern"))
     val scalaMethod = Literal("x", named = Some("ScalaMethod"))
     val theMethod = scalaMethod.copy(named = Some("theMethod"))
-
-    val mr = SimpleMatcherRegistry(Seq(otherPattern, scalaMethod, theMethod))
     val validUseOfVars = Seq("$:OtherPattern", "def $:ScalaMethod", "def $theMethod:ScalaMethod")
-    for (v <- validUseOfVars) mgp.parseMatcher("t", v, mr) match {
+    for (v <- validUseOfVars) mgp.parseMatcher("t", v) match {
       case m: Matcher =>
       case _ => fail(s"failed to parse $v")
     }

@@ -10,9 +10,7 @@ object MatcherMicrogrammarConstruction {
   // I feel like this should return an Either. will wait for a use case
   def matcherMicrogrammar(name: String, grammar: String, submatchers: Map[String, Any] = Map()): MatcherMicrogrammar = {
 
-    val matcherRegistry = EmptyMatcherRegistry //I don't think this is going to be a thing. I have other plans
-
-    val parsedMatcher = matcherParser.parseMatcher(name, grammar, matcherRegistry)
+    val parsedMatcher = matcherParser.parseMatcher(name, grammar)
 
     new MatcherMicrogrammar(parsedMatcher, name)
   }

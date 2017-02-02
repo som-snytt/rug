@@ -47,8 +47,7 @@ case class jsMatch(root: Object, matches: _root_.java.util.List[Object])
 class jsPathExpressionEngine(
                               teamContext: TeamContext,
                               val ee: ExpressionEngine = new PathExpressionEngine,
-                              typeRegistry: TypeRegistry = DefaultTypeRegistry,
-                              private var matcherRegistry: MatcherRegistry = EmptyMatcherRegistry) {
+                              typeRegistry: TypeRegistry = DefaultTypeRegistry) {
 
   /**
     * Return a customized version of this path expression engine for use in a specific
@@ -62,7 +61,7 @@ class jsPathExpressionEngine(
     val tr = new UsageSpecificTypeRegistry(this.typeRegistry,
       Seq(dynamicType).map(dynamicTypeDefinitionToTypeProvider)
     )
-    new jsPathExpressionEngine(teamContext, this.ee, tr, matcherRegistry)
+    new jsPathExpressionEngine(teamContext, this.ee, tr)
   }
 
   private def dynamicTypeDefinitionToTypeProvider(o: Object): Typed = o match {
