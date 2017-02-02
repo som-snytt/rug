@@ -12,7 +12,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class MicrogrammarPathExpressionTest extends FlatSpec with Matchers {
 
-  it should "Let me write the microgrammar this pretty way" in pendingUntilFixed {
+  it should "Let me write the microgrammar this pretty way" in {
     val stringRegex =
       s"""${MatcherDefinitionParser.RegexpOpenToken}"[^"]"${MatcherDefinitionParser.RegexpOpenToken}""" // this is not complete. valid Java string
 
@@ -39,6 +39,10 @@ class MicrogrammarPathExpressionTest extends FlatSpec with Matchers {
         |
         |object Whatever {
         |   val f = FunctionCall("iAmTheName","regex")
+        |
+        |   def somewhereElse = {
+        |      e = FunctionCall("AnotherName", "more regex")
+        |   }
         |}
       """.stripMargin
 
