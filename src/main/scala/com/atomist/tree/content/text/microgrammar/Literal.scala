@@ -60,7 +60,7 @@ case class RestOfLine(name: String = "restOfLine") extends Matcher {
 /**
   * Reference to another matcher.
   */
-case class Reference(delegate: Matcher, name: String) extends Matcher {
+case class Reference(name: String) extends Matcher {
 
   override def matchPrefixInternal(inputState: InputState): MatchPrefixResult =
     delegate.matchPrefix(inputState).right.map(m => m.copy(node = ???))

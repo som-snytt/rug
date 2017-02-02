@@ -31,47 +31,48 @@ class MatcherDefinitionParser extends CommonTypesParser {
 
   private def literal: Parser[Literal] = delimitedLiteral | singleWordLiteral
 
-  private def rex(implicit matcherName: String): Parser[Regex] =
-    RegexpOpenToken ~> anythingBut(Set(escape(RegexpCloseToken), escape(BreakOpenToken))) <~ RegexpCloseToken ^^ (r => Regex(r, Some(matcherName)))
+  private def rex: Parser[Regex] =
+    RegexpOpenToken ~> anythingBut(Set(escape(RegexpCloseToken), escape(BreakOpenToken))) <~ RegexpCloseToken ^^ (r => Regex(r))
 
   /**
     * Skip till this clause
     *
     * @return
     */
-  private def break(implicit matcherName: String): Parser[Break] =
+  private def break: Parser[Break] =
     BreakOpenToken ~> matcherExpression <~ BreakCloseToken ^^ (m => Break(m))
 
   private def predicateValue: Parser[String] = "true" | "false" | "\\d+".r
 
   // Applies to a boxed clause
   // [curlyDepth=1]
-  private def predicate(implicit matcherName: String): Parser[StatePredicateTest] =
+  private def predicate: Parser[StatePredicateTest] =
   PredicateOpenToken ~> ident ~ "=" ~ predicateValue <~ PredicateCloseToken ^^ {
     case predicateName ~ "=" ~ predicateVal => StatePredicateTest(predicateName, predicateVal)
   }
 
 
-  private def matcherTerm(implicit matcherName: String): Parser[Matcher] =
+  private def matcherTerm: Parser[Matcher] =
     rex |
       break |
       literal |
       inlineReference()
 
-  private def concatenation(implicit matcherName: String): Parser[Matcher] =
+  private def concatenation: Parser[Matcher] =
     matcherTerm ~ opt(whitespaceSep) ~ matcherExpression ^^ {
       case left ~ _ ~ right =>
         //left ~? right
-        Concat(Concat(left, Whitespace.?()), right, matcherName)
+        Concat(Concat(left, Whitespace.?()), right)
     }
 
   // $name:[.*]
-  private def inlineReference()(implicit matcherName: String): Parser[Matcher] =
-    VariableDeclarationToken ~> ident ~ ":" ~ rex ^^ {
-      case newName ~ _ ~ regex => regex.copy(givenName = Some(newName))
+  private def inlineReference(): Parser[Matcher] =
+    VariableDeclarationToken ~> ident ~ opt(":" ~ rex) ^^ {
+      case newName ~ Some(_ ~ regex) => Wrap(regex, newName)
+      case matcherName ~ None => Reference(matcherName)
     }
 
-  private def matcherExpression(implicit matcherName: String): Parser[Matcher] =
+  private def matcherExpression: Parser[Matcher] =
       concatenation |
       matcherTerm
 
@@ -88,7 +89,6 @@ class MatcherDefinitionParser extends CommonTypesParser {
     case null =>
       throw new BadRugException(s"The null string is not a valid microgrammar") {}
     case _ =>
-      implicit val matcherName: String = name
       val m = parseTo(StringFileArtifact("<input>", matcherDef), phrase(matcherExpression))
       m
   }
