@@ -64,7 +64,7 @@ case class InputState(
     val updatedPredicates: Map[String, StatePredicate[_]] = predicates.map {
       case (k, v) => (k, v.consume(c))
     }.toMap
-    InputState(input, updatedPredicates, offset + 1)
+    InputState(input, updatedPredicates, offset + 1, knownMatchers)
   }
 
   def valueOf[R](predicateName: String): Option[R] = predicates.get(predicateName).map(p => p.state) match {

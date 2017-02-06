@@ -66,7 +66,9 @@ case class Reference(name: String) extends Matcher {
     val matcherOpt = inputState.knownMatchers.get(name)
     matcherOpt match {
       case Some(matcher) =>
-        matcher.matchPrefix(inputState)
+        val r = matcher.matchPrefix(inputState)
+        println(s"Result of matching $name is $r")
+        r
       case _ =>
         throw new IllegalStateException(s"Could not find matcher '$name'.")
     }

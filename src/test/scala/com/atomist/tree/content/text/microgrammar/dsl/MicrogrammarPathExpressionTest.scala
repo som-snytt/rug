@@ -14,7 +14,7 @@ class MicrogrammarPathExpressionTest extends FlatSpec with Matchers {
 
   it should "Let me write the microgrammar this pretty way" in {
     val stringRegex =
-      s"""${MatcherDefinitionParser.RegexpOpenToken}"[^"]"${MatcherDefinitionParser.RegexpOpenToken}""" // this is not complete. valid Java string
+      s"""${MatcherDefinitionParser.RegexpOpenToken}"[^"]*"${MatcherDefinitionParser.RegexpOpenToken}""" // this is not complete. valid Java string
 
     /* Story: I have this case class (really it was Regex but that's confusing here
      * so let's call it MyFunction) with 2 string args, name and regex.
@@ -31,7 +31,7 @@ class MicrogrammarPathExpressionTest extends FlatSpec with Matchers {
 
     val mg = MatcherMicrogrammarConstruction.matcherMicrogrammar("myFunctionCall", topLevelGrammar, inners)
 
-    val pathExpression = "//File()/myFunctionCall()/nameArg()"
+    val pathExpression = "//File()/myFunctionCall()"
 
     val pretendScala =
       """package blahblah
@@ -41,7 +41,7 @@ class MicrogrammarPathExpressionTest extends FlatSpec with Matchers {
         |   val f = MyFunction("iAmTheName","regex")
         |
         |   def somewhereElse = {
-        |      e = FunctionCall("AnotherName", "more regex")
+        |      e = MyFunction("AnotherName", "more regex")
         |   }
         |}
       """.stripMargin
@@ -49,6 +49,9 @@ class MicrogrammarPathExpressionTest extends FlatSpec with Matchers {
 
     /* someday, expand this test to be in ts */
     val inTypescriptYouWould = s""" n -> n.update(`FunctionCall($${n.reArg()},Some($${n.nameArg()})`)"""
+
+    val justFindTheMatches = mg.findMatches(pretendScala)
+    justFindTheMatches.size should be(2)
 
     val result = ExercisePathExpression.exercisePathExpression(mg, pathExpression, pretendScala )
 
