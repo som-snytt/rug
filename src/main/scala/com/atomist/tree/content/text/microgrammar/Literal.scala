@@ -62,6 +62,14 @@ case class RestOfLine(name: String = "restOfLine") extends Matcher {
   */
 case class Reference(name: String) extends Matcher {
 
-  override def matchPrefixInternal(inputState: InputState): MatchPrefixResult =
-    delegate.matchPrefix(inputState).right.map(m => m.copy(node = ???))
+  override def matchPrefixInternal(inputState: InputState): MatchPrefixResult = {
+    val matcherOpt = inputState.knownMatchers.get(name)
+    matcherOpt match {
+      case Some(matcher) =>
+        matcher.matchPrefix(inputState)
+      case _ =>
+        throw new IllegalStateException(s"Could not find matcher '$name'.")
+    }
+
+  }
 }

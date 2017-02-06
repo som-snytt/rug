@@ -38,7 +38,7 @@ class MicrogrammarPathExpressionTest extends FlatSpec with Matchers {
         |import balahdlsifjd
         |
         |object Whatever {
-        |   val f = FunctionCall("iAmTheName","regex")
+        |   val f = MyFunction("iAmTheName","regex")
         |
         |   def somewhereElse = {
         |      e = FunctionCall("AnotherName", "more regex")

@@ -18,7 +18,7 @@ class MatcherMicrogrammar(val matcher: Matcher, val name: String = "MySpecialMic
         outputNode(input)(m, o)
     }
 
-    //TODO this is super useful!! println(DismatchReport.detailedReport(dismatches.maxBy(_.lengthOfClosestMatch), input.toString))
+    println(DismatchReport.detailedReport(dismatches.maxBy(_.lengthOfClosestMatch), input.toString))
     processedNodes
   }
 

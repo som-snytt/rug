@@ -105,7 +105,7 @@ class MatcherDefinitionParserTest extends FlatSpec with Matchers {
         mgp.parseMatcher("x", v) match {
           case cat: Concat =>
             cat.matchPrefix(InputState(v)) match {
-              case Right(PatternMatch(_, matched, InputState(`v`, _, _), _)) =>
+              case Right(PatternMatch(_, matched, InputState2(`v`, _, _), _)) =>
               case Left(report) => fail(s"Failed to match on [$v]" + report)
               case _ => fail(s"failed to parse/match $v")
             }
