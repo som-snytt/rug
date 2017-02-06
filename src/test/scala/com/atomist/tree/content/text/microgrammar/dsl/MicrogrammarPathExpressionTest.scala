@@ -8,6 +8,7 @@ import com.atomist.source.{SimpleFileBasedArtifactSource, StringFileArtifact}
 import com.atomist.tree.TreeNode
 import com.atomist.tree.content.text.microgrammar._
 import com.atomist.tree.pathexpression.{PathExpressionEngine, PathExpressionParser}
+import com.atomist.tree.utils.TreeNodeUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 class MicrogrammarPathExpressionTest extends FlatSpec with Matchers {
@@ -48,28 +49,31 @@ class MicrogrammarPathExpressionTest extends FlatSpec with Matchers {
 
 
     /* someday, expand this test to be in ts */
-    val inTypescriptYouWould = s""" n -> n.update(`FunctionCall($${n.reArg()},Some($${n.nameArg()})`)"""
+    val inTypescriptYouWould =
+      s""" n -> n.update(`FunctionCall($${n.reArg()},Some($${n.nameArg()})`)"""
 
     val justFindTheMatches = mg.findMatches(pretendScala)
     justFindTheMatches.size should be(2)
 
-    val result = ExercisePathExpression.exercisePathExpression(mg, pathExpression, pretendScala )
+    val result = ExercisePathExpression.exercisePathExpression(mg, pathExpression, pretendScala)
 
-    result.size should be(1)
+    result.size should be(2)
     val m = result.head
-    m.value should be("""FunctionCall("iAmTheName","regex")""")
-    m.childNodes.size should be(2)
-    val nameArgNode = m.childNodes.head
-    nameArgNode.value should be(""""iAmTheName"""")
-    val reArgNode = m.childNodes(1)
-    reArgNode.value should be(""""regex"""")
-
+    withClue(println(TreeNodeUtils.toShortString(m))) {
+      m.value should be("""MyFunction("iAmTheName","regex")""")
+      m.childNodes.size should be(2)
+      val nameArgNode = m.childNodes.head
+      nameArgNode.value should be(""""iAmTheName"""")
+      val reArgNode = m.childNodes(1)
+      reArgNode.value should be(""""regex"""")
+    }
 
   }
 }
 
 
 class OptionalFieldMicrogrammarTest extends FlatSpec with Matchers {
+
   import ExercisePathExpression._
 
   it should "Let give 0 matches when I access something that might exist but does not" in {
@@ -112,7 +116,8 @@ class OptionalFieldMicrogrammarTest extends FlatSpec with Matchers {
 
 }
 
-object ExercisePathExpression extends FlatSpec with Matchers{ // not a test but it needs fail()
+object ExercisePathExpression extends FlatSpec with Matchers {
+  // not a test but it needs fail()
 
   def exercisePathExpression(microgrammar: Microgrammar, pathExpressionString: String, input: String): List[TreeNode] = {
 
