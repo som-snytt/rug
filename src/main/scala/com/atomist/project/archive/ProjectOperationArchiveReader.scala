@@ -15,7 +15,7 @@ import scala.collection.Seq
 
 /**
   * Reads an archive and extracts Atomist project operations.
-  * These can either be Rug DSL archives or TypeScript or JavaScript files.
+  * These can either be Rug DSL archives or JavaScript files.
   * Public API!
   */
 class ProjectOperationArchiveReader(
