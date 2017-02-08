@@ -13,7 +13,6 @@ class HandlerArchiveReaderTest extends FlatSpec with Matchers {
   val treeMaterializer: TreeMaterializer = TestTreeMaterializer
 
   it should "load handlers of different kinds from an archive" in {
-    //val as = TestUtils.editorInSideFile(this, "MyHandlers.ts")
     val ts = ClassPathArtifactSource.toArtifactSource("com/atomist/project/archive/MyHandlers.ts")
     val moved = ts.withPathAbove(".atomist/handlers")
     val as = TypeScriptBuilder.compileWithModel(moved)

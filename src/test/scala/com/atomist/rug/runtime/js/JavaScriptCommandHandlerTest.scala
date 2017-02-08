@@ -1,8 +1,10 @@
 package com.atomist.rug.runtime.js
 
+import com.atomist.param.{ParameterValue, SimpleParameterValue, SimpleParameterValues}
 import com.atomist.plan.TreeMaterializer
 import com.atomist.project.archive.{AtomistConfig, DefaultAtomistConfig}
-import com.atomist.rug.runtime.js.interop.JavaScriptHandlerContext
+import com.atomist.rug.runtime.CommandContext
+import com.atomist.rug.runtime.js.interop.{JavaScriptHandlerContext, jsPathExpressionEngine}
 import com.atomist.rug.ts.TypeScriptBuilder
 import com.atomist.source.{SimpleFileBasedArtifactSource, StringFileArtifact}
 import org.scalatest.{FlatSpec, Matchers}
@@ -23,7 +25,16 @@ class JavaScriptCommandHandlerTest extends FlatSpec with Matchers{
        |@Tags("kitty", "youtube", "slack")
        |@Intent("show me kitties","cats please")
        |class KittieFetcher implements HandleCommand{
-       |  handle(command: CommandContext) : Plan {
+       |
+       |  @Parameter({description: "his dudeness", pattern: "^.*$$"})
+       |  name: string = "dude"
+       |
+       |  handle(ctx: CommandContext) : Plan {
+       |    let pxe = ctx.pathExpressionEngine()
+       |
+       |    if(this.name != "el duderino") {
+       |      throw new Error("This will not stand");
+       |    }
        |    let result = new Plan()
        |    result.add({kind: "execution",
        |                name: "HTTP",
@@ -47,6 +58,16 @@ class JavaScriptCommandHandlerTest extends FlatSpec with Matchers{
     handler.description should be (kittyDesc)
     handler.tags.size should be(3)
     handler.intent.size should be(2)
-    //TODO run it!
+    val plan = handler.handle(SimpleContext, SimpleParameterValues(SimpleParameterValue("name","el duderino")))
+    //TODO = validate the plan
   }
+}
+
+object SimpleContext extends CommandContext{
+  /**
+    * Id of the team we're working on behalf of
+    */
+  override def teamId: String = "blah"
+
+  override def pathExpressionEngine: jsPathExpressionEngine = new jsPathExpressionEngine(this)
 }

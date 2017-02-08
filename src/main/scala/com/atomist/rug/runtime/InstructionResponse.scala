@@ -1,5 +1,7 @@
 package com.atomist.rug.runtime
 
+import java.io.Serializable
+
 /**
   * The response from Rugs, Executions etc
   */

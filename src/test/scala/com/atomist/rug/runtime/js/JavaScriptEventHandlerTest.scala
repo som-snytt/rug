@@ -15,13 +15,17 @@ object JavaScriptEventHandlerTest {
   val atomistConfig: AtomistConfig = DefaultAtomistConfig
   val treeMaterializer: TreeMaterializer = TestTreeMaterializer
 
+  val reOpenIssueHandlerName = "ClosedIssueReopener"
+
+  val reOpenIssueHandlerDesc = "Reopens closed issues"
+
   val reOpenCloseIssueProgram =  StringFileArtifact(atomistConfig.handlersRoot + "/Handler.ts",
     s"""
        |import {HandleEvent, Plan, Message} from '@atomist/rug/operations/Handlers'
        |import {TreeNode, Match, PathExpression} from '@atomist/rug/tree/PathExpression'
        |import {EventHandler, Tags} from '@atomist/rug/operations/Decorators'
        |
-       |@EventHandler("ClosedIssueReopener", "Reopens closed issues", new PathExpression<TreeNode,TreeNode>("/issue"))
+       |@EventHandler("$reOpenIssueHandlerName", "$reOpenIssueHandlerDesc", new PathExpression<TreeNode,TreeNode>("/issue"))
        |@Tags("github", "issues")
        |class SimpleHandler implements HandleEvent<TreeNode,TreeNode> {
        |  handle(event: Match<TreeNode, TreeNode>){
@@ -37,12 +41,17 @@ class JavaScriptEventHandlerTest extends FlatSpec with Matchers{
 
   import JavaScriptEventHandlerTest._
 
-  it should "extract and run a handler based on new style" in {
-
+  it should "extract and run an event handler" in {
     val rugArchive = TypeScriptBuilder.compileWithModel(SimpleFileBasedArtifactSource(JavaScriptEventHandlerTest.reOpenCloseIssueProgram))
     val handlers = JavaScriptEventHandler.extractHandlers(rugArchive, new JavaScriptHandlerContext("XX", treeMaterializer))
     handlers.size should be(1)
-    handlers.head.rootNodeName should be("issue")
+    val handler = handlers.head
+    handler.rootNodeName should be("issue")
+    handler.tags.size should be (2)
+    handler.name should be (reOpenIssueHandlerName)
+    handler.description should be (reOpenIssueHandlerDesc)
+    handler.pathExpression should not be(null)
+    handler.handle(SysEvent)
   }
 }
 
