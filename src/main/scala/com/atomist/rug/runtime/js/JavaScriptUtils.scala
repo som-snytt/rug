@@ -2,72 +2,19 @@ package com.atomist.rug.runtime.js
 
 import javax.script.{ScriptContext, SimpleBindings}
 
-import com.atomist.param.{Parameter, Tag}
-import com.atomist.project.common.support.ProjectOperationParameterSupport
-import com.atomist.project.{ProjectOperation, ProjectOperationArguments}
+import com.atomist.param.{Parameter, ParameterValues, Tag}
 import com.atomist.rug.{InvalidRugParameterDefaultValue, InvalidRugParameterPatternException}
-import com.atomist.rug.kind.core.ProjectMutableView
 import com.atomist.rug.parser.DefaultIdentifierResolver
-import com.atomist.rug.runtime.js.interop.jsSafeCommittingProxy
-import com.atomist.rug.runtime.rugdsl.ContextAwareProjectOperation
-import com.atomist.source.ArtifactSource
-import com.typesafe.scalalogging.LazyLogging
 import jdk.nashorn.api.scripting.ScriptObjectMirror
 
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-
 /**
-  * Superclass for all operations that delegate to JavaScript.
-  *
-  * @param _jsc       JavaScript context
-  * @param _jsVar     var reference in Nashorn
-  * @param rugAs     backing artifact source for the Rug archive
+  * Stuff for all JavaScript based things
   */
-abstract class JavaScriptProjectOperation(
-                                                   _jsc: JavaScriptContext,
-                                                   _jsVar: ScriptObjectMirror,
-                                                   rugAs: ArtifactSource
-                                                 )
-  extends ProjectOperationParameterSupport
-    with ContextAwareProjectOperation
-    with LazyLogging
-    with JavaScriptUtils{
+trait JavaScriptUtils {
 
-  //visible for test
-  private[js] val jsVar = _jsVar
-  private[js] val jsc = _jsc
-
-  tags(jsVar, Seq("__tags", "tags")).foreach(t => addTag(t))
-
-  parameters(jsVar, Seq("__parameters", "parameters")).foreach(p => addParameter(p))
-
-  private var _context: Seq[ProjectOperation] = Nil
-
-  override def setContext(ctx: Seq[ProjectOperation]): Unit = {
-    _context = ctx
-  }
-
-  protected def context: Seq[ProjectOperation] = {
-    _context
-  }
-
-  override def name: String = getMember(jsVar, Seq("__name", "name")).get.asInstanceOf[String]
-
-  override def description: String = getMember(jsVar, Seq("__description", "description")).get.asInstanceOf[String]
-
-  /**
-    * Convenience method that will try `__name` first for decorated things
-    */
-  protected def getMember(name: String, someVar: ScriptObjectMirror = jsVar) : AnyRef = {
-    val decorated = s"__$name"
-    if(someVar.hasMember(decorated)){
-      someVar.getMember(decorated)
-    }else{
-      someVar.getMember(name)
-    }
-  }
   /**
     * Invoke the given member of the JavaScript class with these arguments, processing them as appropriate
     *
@@ -76,16 +23,16 @@ abstract class JavaScriptProjectOperation(
     *               appropriate JavaScript types if necessary
     * @return result of the invocation
     */
-  protected def invokeMemberWithParameters(member: String, args: Object*): Any = {
+  protected def invokeMemberFunction(jsc: JavaScriptContext, jsVar: ScriptObjectMirror, member: String, args: Object*): Any = {
 
-    val clone = cloneVar(jsVar)
+    val clone = cloneVar(jsc, jsVar)
 
     // Translate parameters if necessary
     val processedArgs = args.collect {
-      case poa: ProjectOperationArguments =>
-        val params = poa.parameterValues.map(p => p.getName -> p.getValue).toMap.asJava
-        setParamsIfDecorated(clone,params)
-        params
+      case args: ParameterValues =>
+        val params = args.parameterValues.map(p => p.getName -> p.getValue).toMap
+        setParameters(clone,params)
+        params.asJava
       case x => x
     }
 
@@ -95,9 +42,9 @@ abstract class JavaScriptProjectOperation(
   /**
     * Separate for test
     */
-  private[js] def cloneVar (jsVar: ScriptObjectMirror) : ScriptObjectMirror = {
+  private[js] def cloneVar (jsc: JavaScriptContext, objToClone: ScriptObjectMirror) : ScriptObjectMirror = {
     val bindings = new SimpleBindings()
-    bindings.put("rug",jsVar)
+    bindings.put("rug",objToClone)
 
     //TODO - why do we need this?
     jsc.engine.getContext.getBindings(ScriptContext.ENGINE_SCOPE).asScala.foreach{
@@ -108,7 +55,7 @@ abstract class JavaScriptProjectOperation(
   /**
     * Make sure we only set fields if they've been decorated with @parameter
     */
-  private def setParamsIfDecorated(clone: ScriptObjectMirror, params: java.util.Map[String, AnyRef]): Unit = {
+  protected def setParameters(clone: ScriptObjectMirror, params: Map[String, AnyRef]): Unit = {
     val decoratedParamNames: Set[String] = clone.get("__parameters") match {
       case ps: ScriptObjectMirror if !ps.isEmpty =>
         ps.asScala.collect {
@@ -117,7 +64,7 @@ abstract class JavaScriptProjectOperation(
         }.toSet[String]
       case _ => Set()
     }
-    params.asScala.foreach {
+    params.foreach {
       case (k: String, v: AnyRef) =>
         if(decoratedParamNames.contains(k)){
           clone.put(k,v)
@@ -125,10 +72,23 @@ abstract class JavaScriptProjectOperation(
     }
   }
 
-  protected def readTagsFromMetadata(someVar: ScriptObjectMirror): Seq[Tag] = {
+  /**
+    * Fetch a member by name
+    * @param someVar
+    * @param names
+    * @return
+    */
+  protected def getMember(someVar: ScriptObjectMirror, names: Seq[String]) : Option[AnyRef] = {
+    names.find(someVar.hasMember) match {
+      case Some(name) => Some(someVar.getMember(name))
+      case _ => Option.empty
+    }
+  }
+
+  protected def tags(someVar: ScriptObjectMirror, names: Seq[String] = Seq("tags")): Seq[Tag] = {
     Try {
-      getMember("tags",someVar) match {
-        case som: ScriptObjectMirror =>
+      getMember(someVar, names) match {
+        case Some(som: ScriptObjectMirror) =>
           val stringValues = som.values().asScala collect {
             case s: String => s
           }
@@ -142,17 +102,17 @@ abstract class JavaScriptProjectOperation(
     * Either read the parameters field or look for annotated parameters
     * @return
     */
-  protected def readParametersFromMetadata: Seq[Parameter] = {
-      getMember("parameters") match {
-      case ps: ScriptObjectMirror if !ps.isEmpty =>
+  protected def parameters(someVar: ScriptObjectMirror, names: Seq[String] = Seq("parameters")): Seq[Parameter] = {
+    getMember(someVar, names) match {
+      case Some(ps: ScriptObjectMirror) if !ps.isEmpty =>
         ps.asScala.collect {
-          case (_, details: ScriptObjectMirror) => parameterVarToParameter(jsVar, details)
+          case (_, details: ScriptObjectMirror) => parameterVarToParameter(someVar, details)
         }.toSeq
       case _ => Seq()
     }
   }
 
-  protected def parameterVarToParameter(rug: ScriptObjectMirror, details: ScriptObjectMirror) : Parameter = {
+  private def parameterVarToParameter(rug: ScriptObjectMirror, details: ScriptObjectMirror) : Parameter = {
 
     val pName = details.get("name").asInstanceOf[String]
     val pPattern = details.get("pattern").asInstanceOf[String]
@@ -171,15 +131,9 @@ abstract class JavaScriptProjectOperation(
     parameter.setDefaultRef(details.get("defaultRef").asInstanceOf[String])
     val disp = details.get("displayable")
     parameter.setDisplayable(if(disp != null) disp.asInstanceOf[Boolean] else true)
+    parameter.setRequired(details.get("required").asInstanceOf[Boolean])
 
-    if(details.hasMember("required")){
-      parameter.setRequired(details.get("required").asInstanceOf[Boolean])
-    }else{
-      parameter.setRequired(true)
-    }
-
-
-    parameter.addTags(readTagsFromMetadata(details))
+    parameter.addTags(tags(details))
 
     parameter.setValidInputDescription(details.get("validInput").asInstanceOf[String])
     parameter.describedAs(details.get("description").asInstanceOf[String])
@@ -203,18 +157,9 @@ abstract class JavaScriptProjectOperation(
         parameter.setDefaultValue(x)
       case _ =>
     }
-    if(details.get("decorated").asInstanceOf[Boolean] && rug.hasMember(pName)){
+    if(rug.hasMember(pName)){
       parameter.setDefaultValue(rug.getMember(pName).toString)
     }
     parameter
-  }
-  /**
-    * Convenient class allowing subclasses to wrap projects in a safe, updating proxy
-    *
-    * @param pmv project to wrap
-    * @return proxy TypeScript callers can use
-    */
-  protected def wrapProject(pmv: ProjectMutableView): jsSafeCommittingProxy = {
-    new jsSafeCommittingProxy(pmv)
   }
 }
