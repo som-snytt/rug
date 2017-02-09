@@ -3,7 +3,7 @@ package com.atomist.rug.runtime.js
 import com.atomist.param.{ParameterValue, SimpleParameterValue, Tag}
 import com.atomist.rug.RugRuntimeException
 import com.atomist.rug.kind.DefaultTypeRegistry
-import com.atomist.rug.runtime.js.interop.{JavaScriptHandlerContext, jsContextMatch, jsPathExpressionEngine}
+import com.atomist.rug.runtime.js.interop.{JavaScriptHandlerContext, jsContextMatch, jsPathExpressionEngine, jsSafeCommittingProxy}
 import com.atomist.rug.runtime.{SystemEvent, SystemEventHandler}
 import com.atomist.rug.spi.{InstructionKind, MavenCoordinate, MessageText}
 import com.atomist.rug.spi.Handlers.{Instruction, Message, Plan}
@@ -148,5 +148,5 @@ class JavaScriptEventHandler(jsc: JavaScriptContext,
   */
 private case class jsMatch(cm: jsContextMatch) {
   def root(): Object = cm.root
-  def matches(): java.util.List[Object] = cm.matches
+  def matches(): java.util.List[jsSafeCommittingProxy] = cm.matches
 }
