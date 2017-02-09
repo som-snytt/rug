@@ -4,11 +4,13 @@ import com.atomist.plan.TreeMaterializer
 import com.atomist.project.archive.{AtomistConfig, DefaultAtomistConfig}
 import com.atomist.rug.runtime.SystemEvent
 import com.atomist.rug.runtime.js.interop.JavaScriptHandlerContext
+import com.atomist.rug.spi.MessageText
+import com.atomist.rug.spi.Plan.{Message, Plan}
 import com.atomist.rug.ts.TypeScriptBuilder
 import com.atomist.source.{SimpleFileBasedArtifactSource, StringFileArtifact}
 import com.atomist.tree.pathexpression.PathExpression
 import com.atomist.tree.{TerminalTreeNode, TreeNode}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{DiagrammedAssertions, FlatSpec, Matchers}
 
 
 object JavaScriptEventHandlerTest {
@@ -30,14 +32,22 @@ object JavaScriptEventHandlerTest {
        |class SimpleHandler implements HandleEvent<TreeNode,TreeNode> {
        |  handle(event: Match<TreeNode, TreeNode>){
        |    let issue = event.root
-       |    return new Plan();
+       |    let plan = new Plan()
+       |    plan.add(new Message("message1"))
+       |
+       |    plan.add({kind: "execution",
+       |                name: "HTTP",
+       |                parameters: {method: "GET", url: "http://youtube.com?search=kitty&safe=true", as: "JSON"},
+       |                onSuccess: {kind: "respond", name: "Kitties"},
+       |                onError: {text: "No kitties for you today!"}})
+       |    return plan;
        |  }
        |}
        |export let handler = new SimpleHandler();
       """.stripMargin)
 }
 
-class JavaScriptEventHandlerTest extends FlatSpec with Matchers{
+class JavaScriptEventHandlerTest extends FlatSpec with Matchers with DiagrammedAssertions {
 
   import JavaScriptEventHandlerTest._
 
@@ -51,7 +61,15 @@ class JavaScriptEventHandlerTest extends FlatSpec with Matchers{
     handler.name should be (reOpenIssueHandlerName)
     handler.description should be (reOpenIssueHandlerDesc)
     handler.pathExpression should not be(null)
-    handler.handle(SysEvent)
+
+    val actualPlan = handler.handle(SysEvent)
+    val expectedPlan = Some(Plan(
+      Seq(
+        Message(MessageText("message1"), Nil, None, None)
+      ),
+      Nil
+    ))
+    assert(actualPlan == expectedPlan)
   }
 }
 

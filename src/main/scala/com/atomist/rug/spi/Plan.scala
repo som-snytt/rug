@@ -60,12 +60,7 @@ trait MavenCoordinate {
   val version: String
 }
 
-trait JsonBody extends MessageBody {
-  val json: String
-}
 
-trait MessageText extends MessageBody {
-  val text: String
-}
-
-trait MessageBody
+sealed trait MessageBody
+case class JsonBody(json: String) extends MessageBody
+case class MessageText(text: String) extends MessageBody
