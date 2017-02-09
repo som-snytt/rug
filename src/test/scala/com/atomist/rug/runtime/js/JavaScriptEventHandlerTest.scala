@@ -1,11 +1,12 @@
 package com.atomist.rug.runtime.js
 
+import com.atomist.param.SimpleParameterValue
 import com.atomist.plan.TreeMaterializer
 import com.atomist.project.archive.{AtomistConfig, DefaultAtomistConfig}
 import com.atomist.rug.runtime.SystemEvent
 import com.atomist.rug.runtime.js.interop.JavaScriptHandlerContext
-import com.atomist.rug.spi.MessageText
-import com.atomist.rug.spi.Plan.{Message, Plan}
+import com.atomist.rug.spi.{InstructionKind, MavenCoordinate, MessageText}
+import com.atomist.rug.spi.Handlers.{Instruction, Message, Plan}
 import com.atomist.rug.ts.TypeScriptBuilder
 import com.atomist.source.{SimpleFileBasedArtifactSource, StringFileArtifact}
 import com.atomist.tree.pathexpression.PathExpression
@@ -33,13 +34,28 @@ object JavaScriptEventHandlerTest {
        |  handle(event: Match<TreeNode, TreeNode>){
        |    let issue = event.root
        |    let plan = new Plan()
-       |    plan.add(new Message("message1"))
        |
-       |    plan.add({kind: "execution",
+       |    let message = new Message("message1")
+       |
+       |    const treeNode = ((): TreeNode => {
+       |      const x: any = function() {}
+       |      x.nodeName = function(){ "nodeName1" }
+       |      x.nodeTags = function(){ ["nodeTags1"] }
+       |      x.children = function(){ [] }
+       |      return x;
+       |    });
+       |    message.regarding(treeNode());
+       |    message.addAction({
+       |                kind: "command",
+       |                name: {name: "n", group: "g", artifact: "a", version: "v"}
+       |    })
+       |    plan.add(message);
+       |
+       |    plan.add({kind: "execute",
        |                name: "HTTP",
        |                parameters: {method: "GET", url: "http://youtube.com?search=kitty&safe=true", as: "JSON"},
        |                onSuccess: {kind: "respond", name: "Kitties"},
-       |                onError: {text: "No kitties for you today!"}})
+       |                onError: {text: "No kitties for you today!"}});
        |    return plan;
        |  }
        |}
@@ -60,14 +76,39 @@ class JavaScriptEventHandlerTest extends FlatSpec with Matchers with DiagrammedA
     handler.tags.size should be (2)
     handler.name should be (reOpenIssueHandlerName)
     handler.description should be (reOpenIssueHandlerDesc)
-    handler.pathExpression should not be(null)
+    handler.pathExpression should not be null
 
     val actualPlan = handler.handle(SysEvent)
     val expectedPlan = Some(Plan(
       Seq(
-        Message(MessageText("message1"), Nil, None, None)
+        Message(MessageText("message1"),
+          Seq(
+            Instruction(
+            None,
+            "n",
+            InstructionKind.Command,
+            None,
+            Some(MavenCoordinate("g", "a", "v")),
+            None,
+            None)
+          ),
+          None,
+          None)
       ),
-      Nil
+      Seq(
+        Instruction(
+          None,
+          "HTTP",
+          InstructionKind.Execute,
+          Some(Seq(
+            SimpleParameterValue("method", "GET"),
+            SimpleParameterValue("url", "http://youtube.com?search=kitty&safe=true"),
+            SimpleParameterValue("as", "JSON")
+          )),
+          None,
+          None,
+          None)
+      )
     ))
     assert(actualPlan == expectedPlan)
   }

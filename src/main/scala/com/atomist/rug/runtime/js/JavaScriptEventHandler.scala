@@ -1,16 +1,17 @@
 package com.atomist.rug.runtime.js
 
-import com.atomist.param.Tag
+import com.atomist.param.{ParameterValue, SimpleParameterValue, Tag}
 import com.atomist.rug.RugRuntimeException
 import com.atomist.rug.kind.DefaultTypeRegistry
 import com.atomist.rug.runtime.js.interop.{JavaScriptHandlerContext, jsContextMatch, jsPathExpressionEngine}
 import com.atomist.rug.runtime.{SystemEvent, SystemEventHandler}
-import com.atomist.rug.spi.MessageText
-import com.atomist.rug.spi.Plan.{Message, Plan, Rug}
+import com.atomist.rug.spi.{InstructionKind, MavenCoordinate, MessageText}
+import com.atomist.rug.spi.Handlers.{Instruction, Message, Plan}
 import com.atomist.source.ArtifactSource
 import com.atomist.tree.content.text.SimpleMutableContainerTreeNode
 import com.atomist.tree.pathexpression.{NamedNodeTest, PathExpression, PathExpressionParser}
 import jdk.nashorn.api.scripting.ScriptObjectMirror
+import jdk.nashorn.internal.runtime.Undefined
 
 /**
   * Discover JavaScriptEventHandler from artifact sources
@@ -75,16 +76,18 @@ class JavaScriptEventHandler(jsc: JavaScriptContext,
         val plan = invokeMemberFunction(jsc, handler, "handle", jsMatch(cm))
         val planScriptObject = plan.asInstanceOf[ScriptObjectMirror]
         val jsMessages = planScriptObject.getMember("messages").asInstanceOf[ScriptObjectMirror].values()
-        val messages: Seq[Message] = jsMessages.toArray.toList.map{ message =>
+        val messages: Seq[Message] = jsMessages.toArray.toList.map { message =>
           val m = message.asInstanceOf[ScriptObjectMirror]
+          val instructions = constructInstructions(m)
           Message(
             MessageText(m.getMember("text").asInstanceOf[String]),
-            Nil,
+            instructions,
             None,
             None
           )
         }
-        val instructions: Seq[Rug] = Nil // planScriptObject.getMember("instructions")
+
+        val instructions = constructInstructions(planScriptObject)
         Some(Plan(messages, instructions))
 
       case Left(failure) =>
@@ -92,7 +95,51 @@ class JavaScriptEventHandler(jsc: JavaScriptContext,
           s"Error evaluating path expression $pathExpression: [$failure]")
     }
   }
+
+
+  def constructInstructions(o: ScriptObjectMirror): Seq[Instruction] = {
+    val jsInstructions = o.getMember("instructions").asInstanceOf[ScriptObjectMirror].values()
+    jsInstructions.toArray.toList.map { instruction =>
+      val i = instruction.asInstanceOf[ScriptObjectMirror]
+      val jsInstructionKind = i.getMember("kind").asInstanceOf[String]
+      val instructionKind: InstructionKind.Value = InstructionKind.withName(jsInstructionKind)
+      val parameters: Option[Seq[ParameterValue]] = i.getMember("parameters") match {
+        case u: Undefined => None
+        case o: ScriptObjectMirror =>
+          val params = o.keySet().toArray.toList.map { key =>
+            val name = key.asInstanceOf[String]
+            val value = o.getMember(name)
+            SimpleParameterValue(name, value)
+          }
+          Some(params)
+      }
+      val (name, coordinates) = i.getMember("name") match {
+        case name: String =>
+          (name, None)
+        case o: ScriptObjectMirror =>
+          val name = o.getMember("name").asInstanceOf[String]
+          val coordinates = MavenCoordinate(
+            o.getMember("group").asInstanceOf[String],
+            o.getMember("artifact").asInstanceOf[String],
+            o.getMember("version").asInstanceOf[String]
+          )
+          (name, Some(coordinates))
+      }
+
+      Instruction(
+        None,
+        name,
+        instructionKind,
+        parameters,
+        coordinates,
+        None,
+        None
+      )
+    }
+  }
+
 }
+
 
 /**
   * Represents an event that drives a handler

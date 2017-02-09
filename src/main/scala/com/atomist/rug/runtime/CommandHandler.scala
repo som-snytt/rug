@@ -1,7 +1,7 @@
 package com.atomist.rug.runtime
 
 import com.atomist.param.ParameterValues
-import com.atomist.rug.spi.Plan.Plan
+import com.atomist.rug.spi.Handlers.Plan
 
 /**
   * For bot commands

@@ -1,6 +1,6 @@
 package com.atomist.rug.runtime
 
-import com.atomist.rug.spi.Plan.Plan
+import com.atomist.rug.spi.Handlers.Plan
 
 /**
   * System event, such as a new issue

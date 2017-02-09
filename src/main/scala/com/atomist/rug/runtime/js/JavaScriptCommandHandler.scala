@@ -3,7 +3,7 @@ package com.atomist.rug.runtime.js
 import com.atomist.param.{Parameter, ParameterValues, Tag}
 import com.atomist.rug.runtime.js.interop.JavaScriptHandlerContext
 import com.atomist.rug.runtime.{CommandContext, CommandHandler}
-import com.atomist.rug.spi.Plan.Plan
+import com.atomist.rug.spi.Handlers.Plan
 import com.atomist.source.ArtifactSource
 import jdk.nashorn.api.scripting.ScriptObjectMirror
 
