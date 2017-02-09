@@ -5,8 +5,7 @@ import com.atomist.plan.TreeMaterializer
 import com.atomist.project.archive.{AtomistConfig, DefaultAtomistConfig}
 import com.atomist.rug.runtime.SystemEvent
 import com.atomist.rug.runtime.js.interop.JavaScriptHandlerContext
-import com.atomist.rug.spi.{InstructionKind, MavenCoordinate, MessageText}
-import com.atomist.rug.spi.Handlers.{Instruction, Message, Plan}
+import com.atomist.rug.spi.Handlers._
 import com.atomist.rug.ts.TypeScriptBuilder
 import com.atomist.source.{SimpleFileBasedArtifactSource, StringFileArtifact}
 import com.atomist.tree.pathexpression.PathExpression
@@ -24,7 +23,7 @@ object JavaScriptEventHandlerTest {
 
   val reOpenCloseIssueProgram =  StringFileArtifact(atomistConfig.handlersRoot + "/Handler.ts",
     s"""
-       |import {HandleEvent, Plan, Message} from '@atomist/rug/operations/Handlers'
+       |import {HandleEvent, Plan, Message, Json} from '@atomist/rug/operations/Handlers'
        |import {TreeNode, Match, PathExpression} from '@atomist/rug/tree/PathExpression'
        |import {EventHandler, Tags} from '@atomist/rug/operations/Decorators'
        |
@@ -35,27 +34,34 @@ object JavaScriptEventHandlerTest {
        |    let issue = event.root
        |    let plan = new Plan()
        |
-       |    let message = new Message("message1")
-       |
-       |    const treeNode = ((): TreeNode => {
-       |      const x: any = function() {}
-       |      x.nodeName = function(){ "nodeName1" }
-       |      x.nodeTags = function(){ ["nodeTags1"] }
-       |      x.children = function(){ [] }
-       |      return x;
-       |    });
-       |    message.regarding(treeNode());
+       |    const message = new Message("message1")
        |    message.addAction({
        |                kind: "command",
        |                name: {name: "n", group: "g", artifact: "a", version: "v"}
        |    })
        |    plan.add(message);
        |
+       |    const jsonMessage = new Message({ value: "message2"})
+       |    plan.add(jsonMessage);
+       |
        |    plan.add({kind: "execute",
        |                name: "HTTP",
        |                parameters: {method: "GET", url: "http://youtube.com?search=kitty&safe=true", as: "JSON"},
        |                onSuccess: {kind: "respond", name: "Kitties"},
        |                onError: {text: "No kitties for you today!"}});
+       |
+       |    const anEmptyPlan = new Plan()
+       |    const aPlansPlan = new Plan()
+       |    aPlansPlan.add(new Message("this is a plan that is in another plan"))
+       |    aPlansPlan.add({kind: "generate",
+       |                name: "createSomething",
+       |                onSuccess: anEmptyPlan})
+       |
+       |    plan.add({kind: "edit",
+       |                name: "modifySomething",
+       |                parameters: {message: "planception"},
+       |                onSuccess: aPlansPlan,
+       |                onError: {text: "Error!"}});
        |    return plan;
        |  }
        |}
@@ -83,31 +89,47 @@ class JavaScriptEventHandlerTest extends FlatSpec with Matchers with DiagrammedA
       Seq(
         Message(MessageText("message1"),
           Seq(
-            Instruction(
-            None,
-            "n",
-            InstructionKind.Command,
-            None,
-            Some(MavenCoordinate("g", "a", "v")),
-            None,
-            None)
+            Instruction.Command(Instruction.Detail(
+              "n",
+              Some(MavenCoordinate("g", "a", "v")),
+              Nil,
+              None,
+              None
+            ))
           ),
-          None,
-          None)
+          None),
+        Message(JsonBody("[value=message2]"), Nil, None)
       ),
       Seq(
-        Instruction(
-          None,
+        Instruction.Execute(Instruction.Detail(
           "HTTP",
-          InstructionKind.Execute,
-          Some(Seq(
+          None,
+          Seq(
             SimpleParameterValue("method", "GET"),
             SimpleParameterValue("url", "http://youtube.com?search=kitty&safe=true"),
             SimpleParameterValue("as", "JSON")
+          ),
+          Some(Instruction.Respond(Instruction.Detail(
+            "Kitties",
+            None,
+            Nil,
+            None,
+            None
+          ))),
+          Some(Message(MessageText("No kitties for you today!"), Nil, None))
+        )),
+        Instruction.Edit(Instruction.Detail(
+          "modifySomething",
+          None,
+          Seq(
+            SimpleParameterValue("message", "planception")
+          ),
+          Some(Plan(
+            Seq(Message(MessageText("this is a plan that is in another plan"), Nil, None)),
+            Seq(Instruction.Generate(Instruction.Detail("createSomething", None, Nil, Some(Plan(Nil, Nil)), None)))
           )),
-          None,
-          None,
-          None)
+          Some(Message(MessageText("Error!"), Nil, None))
+        ))
       )
     ))
     assert(actualPlan == expectedPlan)
