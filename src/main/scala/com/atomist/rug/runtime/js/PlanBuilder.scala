@@ -7,7 +7,7 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror
 import jdk.nashorn.internal.runtime.Undefined
 
 /**
-  * That's a great plan, Walter. That's f***ing ingenious, if I understand it correctly. That's a Swiss f***ing watch.
+  * Constructs plans from nashorn response to a Handler/handle operation
   */
 class Planner {
 
