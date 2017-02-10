@@ -1,7 +1,7 @@
 package com.atomist.rug.ts
 
+import com.atomist.param.SimpleParameterValues
 import com.atomist.parse.java.ParsingTargets
-import com.atomist.project.SimpleProjectOperationArguments
 import com.atomist.project.edit.SuccessfulModification
 import com.atomist.rug.runtime.js.{JavaScriptProjectEditor, JavaScriptProjectOperationFinder}
 import com.atomist.source.file.ClassPathArtifactSource
@@ -12,7 +12,7 @@ class SampleTypeScriptTest extends FlatSpec with Matchers {
   it should "use Sample from TypeScript" in {
 
     val tsEditorResource = "com/atomist/rug/ts/SampleTypeScriptTest.ts"
-    val parameters = SimpleProjectOperationArguments.Empty
+    val parameters = SimpleParameterValues.Empty
     val target = ParsingTargets.NewStartSpringIoProject
     val fileThatWillBeModified = "pom.xml"
 

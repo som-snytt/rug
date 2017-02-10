@@ -1,8 +1,9 @@
 package com.atomist.rug.runtime.js
 
 import com.atomist.param.{Parameter, ParameterValues, Tag}
+import com.atomist.rug.InvalidHandlerResultException
 import com.atomist.rug.runtime.js.interop.JavaScriptHandlerContext
-import com.atomist.rug.runtime.{CommandContext, CommandHandler}
+import com.atomist.rug.runtime.{CommandContext, CommandHandler, ParameterizedHandler}
 import com.atomist.rug.spi.Handlers.Plan
 import com.atomist.source.ArtifactSource
 import jdk.nashorn.api.scripting.ScriptObjectMirror
@@ -55,14 +56,21 @@ class JavaScriptCommandHandler(jsc: JavaScriptContext,
                                rugAs: ArtifactSource,
                                override val name: String,
                                override val description: String,
-                               override val parameters: Seq[Parameter],
+                               parameters: Seq[Parameter],
                                override val tags: Seq[Tag],
                                override val intent: Seq[String] = Seq())
   extends CommandHandler
+  with ParameterizedHandler
   with JavaScriptUtils {
 
+  addParameters(parameters)
+
   override def handle(ctx: CommandContext, params: ParameterValues): Option[Plan] = {
-    //TODO integrate proper factory
-    Plan.build(invokeMemberFunction(jsc, handler, "handle", ctx, params))
+    val validated = addDefaultParameterValues(params)
+    validateParameters(validated)
+    invokeMemberFunction(jsc, handler, "handle", ctx, params) match {
+      case plan: ScriptObjectMirror => ConstructPlan(plan)
+      case other => throw new InvalidHandlerResultException(s"$name CommandHandler did not return a recognized response ($other) when invoked with ${params.toString()}")
+    }
   }
 }

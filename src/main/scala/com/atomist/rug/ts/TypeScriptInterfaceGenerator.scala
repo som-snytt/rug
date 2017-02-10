@@ -2,12 +2,11 @@ package com.atomist.rug.ts
 
 import java.io.PrintWriter
 
-import com.atomist.param.Parameter
+import com.atomist.param.{Parameter, ParameterValues, SimpleParameterValues}
 import com.atomist.project.common.InvalidParametersException
-import com.atomist.project.common.support.ProjectOperationParameterSupport
+import com.atomist.project.common.support.ProjectOperationSupport
 import com.atomist.project.edit._
 import com.atomist.project.generate.ProjectGenerator
-import com.atomist.project.{ProjectOperationArguments, SimpleProjectOperationArguments}
 import com.atomist.rug.kind.DefaultTypeRegistry
 import com.atomist.rug.spi._
 import com.atomist.source.{ArtifactSource, FileArtifact, SimpleFileBasedArtifactSource, StringFileArtifact}
@@ -22,7 +21,7 @@ object TypeScriptInterfaceGenerator extends App {
 
   val generator = new TypeScriptInterfaceGenerator
 
-  val output = generator.generate("", SimpleProjectOperationArguments("", Map(generator.OutputPathParam -> "Core.ts")))
+  val output = generator.generate("", SimpleParameterValues(Map(generator.OutputPathParam -> "Core.ts")))
   Utils.withCloseable(new PrintWriter(target))(_.write(output.allFiles.head.content))
   println(s"Written to $target")
 }
@@ -36,7 +35,7 @@ class TypeScriptInterfaceGenerator(typeRegistry: TypeRegistry = DefaultTypeRegis
                                    config: InterfaceGenerationConfig = InterfaceGenerationConfig())
   extends ProjectGenerator
     with ProjectEditor
-    with ProjectOperationParameterSupport {
+    with ProjectOperationSupport {
 
   val DefaultTemplateName = "ts.vm"
 
@@ -103,7 +102,7 @@ class TypeScriptInterfaceGenerator(typeRegistry: TypeRegistry = DefaultTypeRegis
     .setDefaultValue(DefaultFilename))
 
   @throws[InvalidParametersException](classOf[InvalidParametersException])
-  override def generate(projectName: String, poa: ProjectOperationArguments): ArtifactSource = {
+  override def generate(projectName: String, poa: ParameterValues): ArtifactSource = {
     val createdFile = emitInterfaces(poa)
     // println(s"The content of ${createdFile.path} is\n${createdFile.content}")
     new SimpleFileBasedArtifactSource("Rug user model", createdFile)
@@ -144,7 +143,7 @@ class TypeScriptInterfaceGenerator(typeRegistry: TypeRegistry = DefaultTypeRegis
     methods
   }
 
-  private def emitInterfaces(poa: ProjectOperationArguments): FileArtifact = {
+  private def emitInterfaces(poa: ParameterValues): FileArtifact = {
     val alreadyGenerated = ListBuffer.empty[InterfaceType]
 
     val output: StringBuilder = new StringBuilder(config.licenseHeader)
@@ -173,7 +172,7 @@ class TypeScriptInterfaceGenerator(typeRegistry: TypeRegistry = DefaultTypeRegis
       output.toString())
   }
 
-  override def modify(as: ArtifactSource, poa: ProjectOperationArguments): ModificationAttempt = {
+  override def modify(as: ArtifactSource, poa: ParameterValues): ModificationAttempt = {
     val createdFile = emitInterfaces(poa)
     val r = as + createdFile
     SuccessfulModification(r)

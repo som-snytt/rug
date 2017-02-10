@@ -1,10 +1,8 @@
 package com.atomist.rug.kind.java
 
-import com.atomist.project.SimpleProjectOperationArguments
+import com.atomist.param.SimpleParameterValues
 import com.atomist.project.edit.{ModificationAttempt, NoModificationNeeded, ProjectEditor, SuccessfulModification}
 import com.atomist.rug._
-import com.atomist.rug.compiler.typescript.TypeScriptCompiler
-import com.atomist.rug.compiler.typescript.compilation.CompilerFactory
 import com.atomist.rug.kind.DefaultTypeRegistry
 import com.atomist.rug.kind.java.JavaVerifier._
 import com.atomist.rug.ts.TypeScriptBuilder
@@ -79,7 +77,7 @@ object JavaTypeUsageTest extends Matchers {
     val eds = runtime.create(progAs,None)
 
     val pe = eds.head.asInstanceOf[ProjectEditor]
-    pe.modify(as, SimpleProjectOperationArguments("", poa))
+    pe.modify(as, SimpleParameterValues(poa))
   }
 }
 

@@ -13,12 +13,6 @@ object Handlers {
 
   case class Plan(messages: Seq[Message], instructions: Seq[Instruction]) extends Callback
 
-  object Plan {
-    def build(fromNashon: Any): Option[Plan] = {
-      Some(Plan(Nil, Nil))
-    }
-  }
-
   case class Message(body: MessageBody,
                      instructions: Seq[Instruction],
                      channelId: Option[String]) extends Callback

@@ -1,13 +1,10 @@
 package com.atomist.util.lang
 
 import java.util
-import java.util.concurrent.Executors
 
-import com.atomist.project.SimpleProjectOperationArguments
+import com.atomist.param.SimpleParameterValues
 import com.atomist.project.edit.NoModificationNeeded
-import com.atomist.rug.TestUtils
-import com.atomist.rug.runtime.js.interop.UserModelContext
-import com.atomist.rug.runtime.js.{JavaScriptContext, JavaScriptProjectEditor, JavaScriptProjectOperationFinder}
+import com.atomist.rug.runtime.js.{JavaScriptProjectEditor, JavaScriptProjectOperationFinder}
 import com.atomist.rug.ts.TypeScriptBuilder
 import com.atomist.source.{FileArtifact, SimpleFileBasedArtifactSource, StringFileArtifact}
 import org.scalatest.{FlatSpec, Matchers}
@@ -245,7 +242,7 @@ class JavaScriptArrayTest extends FlatSpec with Matchers {
 
     val lyzt = new util.ArrayList[String]()
     lyzt.add("blah")
-    jsed.modify(target, SimpleProjectOperationArguments("", Map("packageName" -> "com.atomist.crushed", "strings" -> new JavaScriptArray(lyzt)))) match {
+    jsed.modify(target, SimpleParameterValues(Map("packageName" -> "com.atomist.crushed", "strings" -> new JavaScriptArray(lyzt)))) match {
       case sm: NoModificationNeeded =>
       sm.comment.contains("OK") should be(true)
       case _ => ???

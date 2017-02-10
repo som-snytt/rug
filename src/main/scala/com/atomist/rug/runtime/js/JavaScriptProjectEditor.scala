@@ -1,6 +1,6 @@
 package com.atomist.rug.runtime.js
 
-import com.atomist.project.ProjectOperationArguments
+import com.atomist.param.ParameterValues
 import com.atomist.project.archive.DefaultAtomistConfig
 import com.atomist.project.edit.{ProjectEditorSupport, _}
 import com.atomist.rug.kind.core.ProjectMutableView
@@ -24,7 +24,7 @@ class JavaScriptProjectEditor(
 
   override protected def modifyInternal(
                                          targetProject: ArtifactSource,
-                                         poa: ProjectOperationArguments): ModificationAttempt = {
+                                         poa: ParameterValues): ModificationAttempt = {
     val (result, elapsedTime) = time {
       val pmv = new ProjectMutableView(rugAs,
         targetProject,

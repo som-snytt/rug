@@ -1,6 +1,6 @@
 package com.atomist.rug.kind.yml
 
-import com.atomist.project.SimpleProjectOperationArguments
+import com.atomist.param.SimpleParameterValues
 import com.atomist.project.edit.{NoModificationNeeded, SuccessfulModification}
 import com.atomist.rug.DefaultRugPipeline
 import com.atomist.rug.InterpreterRugPipeline.DefaultRugArchive
@@ -95,7 +95,7 @@ class YmlUsageTest extends FlatSpec with Matchers {
     )
 
     val modAttempt = attemptModification(progArtifact, as, EmptyArtifactSource(""),
-      SimpleProjectOperationArguments("", Map.empty[String,Object]))
+      SimpleParameterValues( Map.empty[String,Object]))
 
     modAttempt match {
       case sm: SuccessfulModification if sm.result.cachedDeltas.size == mods =>

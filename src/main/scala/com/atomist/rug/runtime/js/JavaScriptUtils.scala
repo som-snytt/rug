@@ -35,7 +35,7 @@ trait JavaScriptUtils {
         params.asJava
       case x => x
     }
-
+    //TODO wrap parameters in safe committing proxy
     clone.asInstanceOf[ScriptObjectMirror].callMember(member,processedArgs: _* )
   }
 

@@ -1,8 +1,6 @@
 package com.atomist.rug.runtime.js
 
-import java.util.concurrent.Executors
-
-import com.atomist.project.SimpleProjectOperationArguments
+import com.atomist.param.SimpleParameterValues
 import com.atomist.project.common.MissingParametersException
 import com.atomist.rug.ts.TypeScriptBuilder
 import com.atomist.rug.{InvalidRugParameterDefaultValue, InvalidRugParameterPatternException}
@@ -220,7 +218,7 @@ class JavaScriptProjectOperationTest extends FlatSpec with Matchers {
     val jsed = JavaScriptProjectOperationFinder.fromJavaScriptArchive(as).head.asInstanceOf[JavaScriptProjectEditor]
     assert(jsed.name === "Simple")
     val target = SimpleFileBasedArtifactSource(StringFileArtifact("pom.xml", "nasty stuff"))
-    jsed.modify(target, SimpleProjectOperationArguments.Empty)
+    jsed.modify(target, SimpleParameterValues.Empty)
   }
 
   it should "run simple editor compiled from TypeScript and validate the pattern correctly" in {
@@ -276,7 +274,7 @@ class JavaScriptProjectOperationTest extends FlatSpec with Matchers {
     val target = SimpleFileBasedArtifactSource(StringFileArtifact("pom.xml", "nasty stuff"))
 
     assertThrows[MissingParametersException]{
-      jsed.modify(target, SimpleProjectOperationArguments.Empty)
+      jsed.modify(target, SimpleParameterValues.Empty)
     }
   }
 
@@ -285,7 +283,7 @@ class JavaScriptProjectOperationTest extends FlatSpec with Matchers {
     val jsed = JavaScriptProjectOperationFinder.fromJavaScriptArchive(as).head.asInstanceOf[JavaScriptProjectEditor]
     assert(jsed.name === "Simple")
     val target = SimpleFileBasedArtifactSource(StringFileArtifact("pom.xml", "nasty stuff"))
-    jsed.modify(target, SimpleProjectOperationArguments("", Map("content" -> "http://blah.com"))) match {
+    jsed.modify(target, SimpleParameterValues( Map("content" -> "http://blah.com"))) match {
       case _ =>
     
     }
@@ -297,7 +295,7 @@ class JavaScriptProjectOperationTest extends FlatSpec with Matchers {
     val jsr = JavaScriptProjectOperationFinder.fromJavaScriptArchive(as).head.asInstanceOf[JavaScriptProjectReviewer]
     assert(jsr.name === "Simple")
     val target = SimpleFileBasedArtifactSource(StringFileArtifact("pom.xml", "nasty stuff"))
-    jsr.review(target, SimpleProjectOperationArguments("", Map("content" -> "http://blah.com"))) match {
+    jsr.review(target, SimpleParameterValues( Map("content" -> "http://blah.com"))) match {
       case _ =>
     
     }
@@ -309,7 +307,7 @@ class JavaScriptProjectOperationTest extends FlatSpec with Matchers {
     val jsed = JavaScriptProjectOperationFinder.fromJavaScriptArchive(as).head.asInstanceOf[JavaScriptProjectEditor]
     assert(jsed.name === "Simple")
     val target = SimpleFileBasedArtifactSource(StringFileArtifact("pom.xml", "nasty stuff"))
-    jsed.modify(target, SimpleProjectOperationArguments("", Map[String,String]())) match {
+    jsed.modify(target, SimpleParameterValues( Map[String,String]())) match {
       case _ =>
     
     }

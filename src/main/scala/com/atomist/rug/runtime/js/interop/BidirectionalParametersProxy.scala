@@ -1,7 +1,6 @@
 package com.atomist.rug.runtime.js.interop
 
-import com.atomist.param.ParameterValue
-import com.atomist.project.ProjectOperationArguments
+import com.atomist.param.{ParameterValue, ParameterValues}
 import com.atomist.rug.RugRuntimeException
 import jdk.nashorn.api.scripting.AbstractJSObject
 
@@ -9,7 +8,7 @@ import jdk.nashorn.api.scripting.AbstractJSObject
   * Dynamic properties holder that represents the JVM counterpart of a TypeScript class that
   * doesn't exist in Java. Allows additional keys to be set on the proxy.
   */
-class BidirectionalParametersProxy(poa: ProjectOperationArguments) extends AbstractJSObject {
+class BidirectionalParametersProxy(poa: ParameterValues) extends AbstractJSObject {
 
   private var _additionalValues: Map[String, Object] = Map()
 

@@ -1,14 +1,11 @@
 package com.atomist.rug.kind.rug
 
-import java.util.concurrent.Executors
-
-import com.atomist.project.{ProjectOperation, SimpleProjectOperationArguments}
+import com.atomist.param.SimpleParameterValues
+import com.atomist.project.ProjectOperation
 import com.atomist.project.edit.{ProjectEditor, SuccessfulModification}
-import com.atomist.rug.compiler.typescript.TypeScriptCompiler
-import com.atomist.rug.compiler.typescript.compilation.CompilerFactory
 import com.atomist.rug.runtime.js.{JavaScriptProjectEditor, JavaScriptProjectOperationFinder}
-import com.atomist.rug.{CompilerChainPipeline, RugPipeline, TestUtils}
 import com.atomist.rug.ts.{RugTranspiler, TypeScriptBuilder}
+import com.atomist.rug.{CompilerChainPipeline, RugPipeline}
 import com.atomist.source.{ArtifactSource, SimpleFileBasedArtifactSource, StringFileArtifact}
 import org.scalatest.Matchers
 
@@ -41,7 +38,7 @@ trait TypeScriptEditorTestHelper extends Matchers {
     jsed.setContext(others)
 
     val pe = eds.head.asInstanceOf[ProjectEditor]
-    pe.modify(target, SimpleProjectOperationArguments("", params)) match {
+    pe.modify(target, SimpleParameterValues( params)) match {
       case sm: SuccessfulModification =>
         sm.result
       case um =>

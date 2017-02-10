@@ -1,6 +1,9 @@
 package com.atomist.rug.runtime.js
 
+import java.util.Collections
+
 import com.atomist.param.{ParameterValue, SimpleParameterValue}
+import com.atomist.rug.InvalidHandlerResultException
 import com.atomist.rug.spi.Handlers.Instruction.Respond
 import com.atomist.rug.spi.Handlers._
 import jdk.nashorn.api.scripting.ScriptObjectMirror
@@ -9,10 +12,25 @@ import jdk.nashorn.internal.runtime.Undefined
 /**
   * Constructs plans from Nashorn response to a Handler/handle operation
   */
+
+
+
+object ConstructPlan {
+  def apply(jsObj: Any): Option[Plan] = {
+    jsObj match {
+      case o: ScriptObjectMirror => Some(new PlanBuilder().constructPlan(o))
+      case other => throw new InvalidHandlerResultException(s"Could not construct Plan from result: $other")
+    }
+  }
+}
+
 class PlanBuilder {
 
   def constructPlan(jsPlan: ScriptObjectMirror): Plan = {
-    val jsMessages = jsPlan.getMember("messages").asInstanceOf[ScriptObjectMirror].values()
+    val jsMessages = jsPlan.getMember("messages") match {
+      case o: ScriptObjectMirror => o.values()
+      case _ => Collections.emptyList()
+    }
     val messages: Seq[Message] = jsMessages.toArray.toList.map { message =>
       val m = message.asInstanceOf[ScriptObjectMirror]
       constructMessage(m)
@@ -98,5 +116,4 @@ class PlanBuilder {
         }
     }
   }
-
 }

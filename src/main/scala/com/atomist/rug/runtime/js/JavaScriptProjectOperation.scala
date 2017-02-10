@@ -1,7 +1,7 @@
 package com.atomist.rug.runtime.js
 
 import com.atomist.project.ProjectOperation
-import com.atomist.project.common.support.ProjectOperationParameterSupport
+import com.atomist.project.common.support.ProjectOperationSupport
 import com.atomist.rug.kind.core.ProjectMutableView
 import com.atomist.rug.runtime.js.interop.jsSafeCommittingProxy
 import com.atomist.rug.runtime.rugdsl.ContextAwareProjectOperation
@@ -22,7 +22,7 @@ abstract class JavaScriptProjectOperation(
                                            _jsVar: ScriptObjectMirror,
                                            rugAs: ArtifactSource
                                          )
-  extends ProjectOperationParameterSupport
+  extends ProjectOperationSupport
     with ContextAwareProjectOperation
     with LazyLogging
     with JavaScriptUtils {

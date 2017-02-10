@@ -1,11 +1,8 @@
 package com.atomist.rug.runtime.js
 
-import java.util.concurrent.Executors
-
+import com.atomist.param.SimpleParameterValues
+import com.atomist.project.ProjectOperation
 import com.atomist.project.review.{ReviewResult, Severity}
-import com.atomist.project.{ProjectOperation, SimpleProjectOperationArguments}
-import com.atomist.rug.TestUtils
-import com.atomist.rug.compiler.typescript.TypeScriptCompiler
 import com.atomist.rug.ts.TypeScriptBuilder
 import com.atomist.source.{FileArtifact, SimpleFileBasedArtifactSource, StringFileArtifact}
 import org.scalatest.{FlatSpec, Matchers}
@@ -205,6 +202,6 @@ class TypeScriptRugReviewerTest extends FlatSpec with Matchers {
 
     val target = SimpleFileBasedArtifactSource(StringFileArtifact("pom.xml", "nasty stuff"))
 
-    jsed.review(target, SimpleProjectOperationArguments("", Map("content" -> ParameterContent)))
+    jsed.review(target, SimpleParameterValues( Map("content" -> ParameterContent)))
   }
 }

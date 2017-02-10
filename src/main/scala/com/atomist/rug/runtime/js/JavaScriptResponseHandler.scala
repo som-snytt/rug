@@ -1,6 +1,7 @@
 package com.atomist.rug.runtime.js
 
 import com.atomist.param.{Parameter, ParameterValues, Tag}
+import com.atomist.rug.InvalidHandlerResultException
 import com.atomist.rug.runtime.js.interop.JavaScriptHandlerContext
 import com.atomist.rug.runtime.{InstructionResponse, ParameterizedHandler, ResponseHandler}
 import com.atomist.rug.spi.Handlers.Plan
@@ -25,13 +26,21 @@ class JavaScriptResponseHandler (jsc: JavaScriptContext,
                                  as: ArtifactSource,
                                  override val name: String,
                                  override val description: String,
-                                 override val parameters: Seq[Parameter],
+                                 parameters: Seq[Parameter],
                                  override val tags: Seq[Tag])
   extends ParameterizedHandler
     with ResponseHandler
     with JavaScriptUtils {
 
+  addParameters(parameters)
+
   override def handle(response: InstructionResponse, params: ParameterValues): Option[Plan] = {
-    Plan.build(invokeMemberFunction(jsc, handler, "handle", response, params))
+    //TODO this handle method is almost identical to the command handler - extract it
+    val validated = addDefaultParameterValues(params)
+    validateParameters(validated)
+    invokeMemberFunction(jsc, handler, "handle", response, validated) match {
+      case plan: ScriptObjectMirror => ConstructPlan(plan)
+      case other => throw new InvalidHandlerResultException(s"$name ResponseHandler did not return a recognized response ($other) when invoked with ${params.toString()}")
+    }
   }
 }

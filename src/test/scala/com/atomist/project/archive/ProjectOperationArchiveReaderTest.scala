@@ -1,6 +1,6 @@
 package com.atomist.project.archive
 
-import com.atomist.project.SimpleProjectOperationArguments
+import com.atomist.param.SimpleParameterValues
 import com.atomist.rug.Import
 import com.atomist.rug.runtime.js.{JavaScriptEventHandlerTest, TypeScriptRugEditorTest}
 import com.atomist.rug.runtime.lang.js.NashornConstructorTest
@@ -180,7 +180,7 @@ class ProjectOperationArchiveReaderTest extends FlatSpec with Matchers {
     val ops = apc.findOperations(rugAs, None, Nil)
     assert(ops.generators.size === 1)
     assert(ops.generators.head.parameters.size === 0)
-    val result = ops.generators.head.generate("woot", SimpleProjectOperationArguments("", Map("content" -> "woot")))
+    val result = ops.generators.head.generate("woot", SimpleParameterValues(Map("content" -> "woot")))
     // Should preserve content from the backing archive
     result.findFile(f1.path).get.content.equals(f1.content) should be(true)
     result.findFile(f2.path).get.content.equals(f2.content) should be(true)

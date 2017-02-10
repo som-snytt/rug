@@ -1,9 +1,9 @@
 package com.atomist.rug.runtime.js
 
-import com.atomist.param.Tag
+import com.atomist.param.{ParameterValues, SimpleParameterValues, Tag}
 import com.atomist.project.common.IllformedParametersException
 import com.atomist.project.edit._
-import com.atomist.project.{ProjectOperation, ProjectOperationArguments, SimpleProjectOperationArguments}
+import com.atomist.project.ProjectOperation
 import com.atomist.rug.ts.TypeScriptBuilder
 import com.atomist.source.{ArtifactSource, FileArtifact, SimpleFileBasedArtifactSource, StringFileArtifact}
 import org.scalatest.{FlatSpec, Matchers}
@@ -395,7 +395,7 @@ class TypeScriptRugEditorTest extends FlatSpec with Matchers {
   }
 
   val otherEditor: ProjectEditor = new ProjectEditorSupport {
-    override protected  def modifyInternal(as: ArtifactSource, pmi: ProjectOperationArguments): ModificationAttempt = {
+    override protected  def modifyInternal(as: ArtifactSource, pmi: ParameterValues): ModificationAttempt = {
       SuccessfulModification(as + StringFileArtifact("src/from/typescript", pmi.stringParamValue("otherParam")))
     }
 
@@ -489,7 +489,7 @@ class TypeScriptRugEditorTest extends FlatSpec with Matchers {
     val target = SimpleFileBasedArtifactSource(StringFileArtifact("pom.xml", "nasty stuff"))
 
     // This should not work beause it doesn't meet the content pattern
-    an[IllformedParametersException] should be thrownBy (jsed.modify(target, SimpleProjectOperationArguments("", Map("content" -> "Bjarn Stroustrup is God"))))
+    an[IllformedParametersException] should be thrownBy (jsed.modify(target, SimpleParameterValues(Map("content" -> "Bjarn Stroustrup is God"))))
   }
 
   it should "handle default parameter values" in {
@@ -511,7 +511,7 @@ class TypeScriptRugEditorTest extends FlatSpec with Matchers {
     assert(jsed.name === "Constructed")
 
     val target = SimpleFileBasedArtifactSource(StringFileArtifact("pom.xml", "nasty stuff"))
-    jsed.modify(target, SimpleProjectOperationArguments("", Map("packageName" -> "com.atomist.crushed"))) match {
+    jsed.modify(target, SimpleParameterValues(Map("packageName" -> "com.atomist.crushed"))) match {
       case sm: SuccessfulModification =>
       //sm.comment.contains("OK") should be(true)
         sm.result.findFile("pom.xml").get.content.contains("randomness") should be (true)
@@ -528,7 +528,7 @@ class TypeScriptRugEditorTest extends FlatSpec with Matchers {
 
     jsed.setContext(others)
 
-    val prj = jsed.generate("woot", SimpleProjectOperationArguments("", Map("content" -> "Anders Hjelsberg is God")))
+    val prj = jsed.generate("woot", SimpleParameterValues( Map("content" -> "Anders Hjelsberg is God")))
     assert(prj.id.name === "woot")
 
     jsed
@@ -544,7 +544,7 @@ class TypeScriptRugEditorTest extends FlatSpec with Matchers {
 
     val target = SimpleFileBasedArtifactSource(StringFileArtifact("pom.xml", "nasty stuff"))
 
-    jsed.modify(target, SimpleProjectOperationArguments("", Map("content" -> "Anders Hjelsberg is God"))) match {
+    jsed.modify(target, SimpleParameterValues(Map("content" -> "Anders Hjelsberg is God"))) match {
       case sm: SuccessfulModification =>
         assert(sm.result.totalFileCount === 2)
         sm.result.findFile("src/from/typescript").get.content.contains("Anders") should be(true)
@@ -562,7 +562,7 @@ class TypeScriptRugEditorTest extends FlatSpec with Matchers {
 
     val target = SimpleFileBasedArtifactSource(StringFileArtifact("pom.xml", "nasty stuff"))
 
-    val p = SimpleProjectOperationArguments("", Map("content" -> "Anders Hjelsberg is God"))
+    val p = SimpleParameterValues(Map("content" -> "Anders Hjelsberg is God"))
     jsed.modify(target, p) match {
       case sm: SuccessfulModification =>
         assert(sm.result.totalFileCount === 2)

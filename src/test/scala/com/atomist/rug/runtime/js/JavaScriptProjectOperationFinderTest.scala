@@ -1,12 +1,10 @@
 package com.atomist.rug.runtime.js
 
-import java.util.concurrent.Executors
-
-import com.atomist.project.SimpleProjectOperationArguments
+import com.atomist.param.SimpleParameterValues
 import com.atomist.rug.ts.TypeScriptBuilder
 import com.atomist.source.{FileArtifact, SimpleFileBasedArtifactSource, StringFileArtifact}
-import org.scalatest.{FlatSpec, Matchers}
 import com.atomist.util.Timing._
+import org.scalatest.{FlatSpec, Matchers}
 
 
 class JavaScriptProjectOperationFinderTest  extends FlatSpec with Matchers {
@@ -90,32 +88,32 @@ class JavaScriptProjectOperationFinderTest  extends FlatSpec with Matchers {
     println(s"Loading editor took: $evalTime ms")
 
     val (_, run1) = time {
-      1 to 2 foreach { _ => ed.modify(target,SimpleProjectOperationArguments("", Map("content" -> "woot")))}
+      1 to 2 foreach { _ => ed.modify(target,SimpleParameterValues( Map("content" -> "woot")))}
     }
     println(s"1 run took: -> $run1 ms")
 
     val (_, run10) = time {
-      1 to 10 foreach { _ => ed.modify(target,SimpleProjectOperationArguments("", Map("content" -> "woot")))}
+      1 to 10 foreach { _ => ed.modify(target,SimpleParameterValues( Map("content" -> "woot")))}
     }
     println(s"10 runs took: -> ${run10/10d} ms/run")
 
     val (_, run100) = time {
-      1 to 100 foreach { _ => ed.modify(target,SimpleProjectOperationArguments("", Map("content" -> "woot")))}
+      1 to 100 foreach { _ => ed.modify(target,SimpleParameterValues( Map("content" -> "woot")))}
     }
     println(s"100 runs took: -> ${run100/100d} ms/run")
 
     val (_, run1000) = time {
-      1 to 1000 foreach { _ => ed.modify(target,SimpleProjectOperationArguments("", Map("content" -> "woot")))}
+      1 to 1000 foreach { _ => ed.modify(target,SimpleParameterValues( Map("content" -> "woot")))}
     }
     println(s"1000 runs took: -> ${run1000/1000d} ms/run")
 
     val (_, run100000) = time {
-      1 to 100000 foreach { _ => ed.modify(target,SimpleProjectOperationArguments("", Map("content" -> "woot")))}
+      1 to 100000 foreach { _ => ed.modify(target,SimpleParameterValues( Map("content" -> "woot")))}
     }
     println(s"100000 runs took: -> ${run100000/100000d} ms/run")
 
     val (_, run1000000) = time {
-      1 to 1000000 foreach { _ => ed.modify(target,SimpleProjectOperationArguments("", Map("content" -> "woot")))}
+      1 to 1000000 foreach { _ => ed.modify(target,SimpleParameterValues( Map("content" -> "woot")))}
     }
     println(s"1000000 runs took: -> ${run1000000/1000000d} ms/run")
   }
@@ -126,7 +124,7 @@ class JavaScriptProjectOperationFinderTest  extends FlatSpec with Matchers {
     val jsed = JavaScriptProjectOperationFinder.fromJavaScriptArchive(as).head.asInstanceOf[JavaScriptProjectEditor]
     assert(jsed.name === "Simple")
     val target = SimpleFileBasedArtifactSource(StringFileArtifact("pom.xml", "nasty stuff"))
-    jsed.modify(target,SimpleProjectOperationArguments("", Map("content" -> "woot")))
+    jsed.modify(target,SimpleParameterValues( Map("content" -> "woot")))
     jsed
   }
 }

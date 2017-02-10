@@ -1,6 +1,6 @@
 package com.atomist.rug
 
-import com.atomist.project.ProjectOperationArguments
+import com.atomist.param.ParameterValues
 import com.atomist.project.archive.{AtomistConfig, DefaultAtomistConfig}
 import com.atomist.project.edit.{ModificationAttempt, ProjectEditor, SuccessfulModification}
 import com.atomist.rug.kind.DefaultTypeRegistry
@@ -17,7 +17,7 @@ object TestUtils extends Matchers {
   def doModification(program: ArtifactSource,
                      as: ArtifactSource,
                      backingAs: ArtifactSource,
-                     poa: ProjectOperationArguments,
+                     poa: ParameterValues,
                      pipeline: RugPipeline = new DefaultRugPipeline(DefaultTypeRegistry)): ArtifactSource = {
 
     attemptModification(program, as, backingAs, poa, pipeline) match {
@@ -30,7 +30,7 @@ object TestUtils extends Matchers {
   def attemptModification(program: ArtifactSource,
                           as: ArtifactSource,
                           backingAs: ArtifactSource,
-                          poa: ProjectOperationArguments,
+                          poa: ParameterValues,
                           pipeline: RugPipeline = new DefaultRugPipeline(DefaultTypeRegistry)): ModificationAttempt = {
 
     val eds = pipeline.create(backingAs + program, None)

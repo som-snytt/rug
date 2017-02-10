@@ -1,8 +1,9 @@
 package com.atomist.tree.content.text.microgrammar.dsl
 
+import com.atomist.param.SimpleParameterValues
 import com.atomist.parse.java.ParsingTargets
+import com.atomist.project.ProjectOperation
 import com.atomist.project.edit.SuccessfulModification
-import com.atomist.project.{ProjectOperation, SimpleProjectOperationArguments}
 import com.atomist.rug.runtime.js.{JavaScriptProjectEditor, JavaScriptProjectOperationFinder}
 import com.atomist.rug.ts.TypeScriptBuilder
 import com.atomist.source.{FileArtifact, SimpleFileBasedArtifactSource, StringFileArtifact}
@@ -199,7 +200,7 @@ class TypeScriptMicrogrammarTest extends FlatSpec with Matchers {
       StringFileArtifact(s".atomist/editors/SimpleEditor.ts", NavigatesNestedUsingPathExpression)))
     val jsed = JavaScriptProjectOperationFinder.fromJavaScriptArchive(as).head.asInstanceOf[JavaScriptProjectEditor]
     val target = ParsingTargets.SpringIoGuidesRestServiceSource
-    jsed.modify(target, SimpleProjectOperationArguments.Empty) match {
+    jsed.modify(target, SimpleParameterValues.Empty) match {
       case sm: SuccessfulModification =>
         sm.result.allFiles.exists(f => f.content.contains("_x"))
       case _ => ???
@@ -237,7 +238,7 @@ class TypeScriptMicrogrammarTest extends FlatSpec with Matchers {
     val jsed = JavaScriptProjectOperationFinder.fromJavaScriptArchive(as).head.asInstanceOf[JavaScriptProjectEditor]
     val target = ParsingTargets.SpringIoGuidesRestServiceSource
     try {
-      jsed.modify(target, SimpleProjectOperationArguments.Empty)
+      jsed.modify(target, SimpleParameterValues.Empty)
       fail("There is no setBanana method, this should fail")
     } catch {
       case e: Exception =>
@@ -255,7 +256,7 @@ class TypeScriptMicrogrammarTest extends FlatSpec with Matchers {
       StringFileArtifact(s".atomist/editors/SimpleEditor.ts", NavigatesNestedUsingProperty)))
     val jsed = JavaScriptProjectOperationFinder.fromJavaScriptArchive(as).head.asInstanceOf[JavaScriptProjectEditor]
     val target = ParsingTargets.SpringIoGuidesRestServiceSource
-    jsed.modify(target, SimpleProjectOperationArguments.Empty) match {
+    jsed.modify(target, SimpleParameterValues.Empty) match {
       case sm: SuccessfulModification =>
         sm.result.allFiles.exists(f => f.content.contains("_x"))
       case _ => ???
@@ -268,7 +269,7 @@ class TypeScriptMicrogrammarTest extends FlatSpec with Matchers {
     val jsed = JavaScriptProjectOperationFinder.fromJavaScriptArchive(as).head.asInstanceOf[JavaScriptProjectEditor]
     val target = ParsingTargets.NewStartSpringIoProject
     val before = target.findFile("pom.xml").get.content
-    jsed.modify(target, SimpleProjectOperationArguments.Empty) match {
+    jsed.modify(target, SimpleParameterValues.Empty) match {
       case sm: SuccessfulModification =>
         sm.result.findFile("pom.xml").get.content.contains("Foo bar") should be(true)
         val after = sm.result.findFile("pom.xml").get.content

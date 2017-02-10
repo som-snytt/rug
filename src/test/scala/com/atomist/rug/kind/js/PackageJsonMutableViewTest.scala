@@ -1,6 +1,6 @@
 package com.atomist.rug.kind.js
 
-import com.atomist.project.SimpleProjectOperationArguments
+import com.atomist.param.SimpleParameterValues
 import com.atomist.rug.kind.core.ProjectMutableView
 import com.atomist.rug.runtime.rugdsl.SimpleFunctionInvocationContext
 import com.atomist.source.{EmptyArtifactSource, SimpleFileBasedArtifactSource, StringFileArtifact}
@@ -24,7 +24,7 @@ class PackageJsonMutableViewTest extends FlatSpec with Matchers {
     val v = new PackageJsonMutableView(packageFile,
       new ProjectMutableView(EmptyArtifactSource(""), as))
     val ic = SimpleFunctionInvocationContext("p", null, v, as, null, Map(),
-      SimpleProjectOperationArguments.Empty, Nil)
+      SimpleParameterValues.Empty, Nil)
     v.packageName(ic) should be ("module-name")
   }
 }

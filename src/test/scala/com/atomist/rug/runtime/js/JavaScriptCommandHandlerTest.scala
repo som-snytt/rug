@@ -3,6 +3,7 @@ package com.atomist.rug.runtime.js
 import com.atomist.param.{ParameterValue, SimpleParameterValue, SimpleParameterValues}
 import com.atomist.plan.TreeMaterializer
 import com.atomist.project.archive.{AtomistConfig, DefaultAtomistConfig}
+import com.atomist.project.common.MissingParametersException
 import com.atomist.rug.runtime.CommandContext
 import com.atomist.rug.runtime.js.interop.{JavaScriptHandlerContext, jsPathExpressionEngine}
 import com.atomist.rug.ts.TypeScriptBuilder
@@ -27,7 +28,7 @@ class JavaScriptCommandHandlerTest extends FlatSpec with Matchers{
        |class KittieFetcher implements HandleCommand{
        |
        |  @Parameter({description: "his dudeness", pattern: "^.*$$"})
-       |  name: string = "dude"
+       |  name: string
        |
        |  handle(ctx: CommandContext) : Plan {
        |    let pxe = ctx.pathExpressionEngine()
@@ -36,7 +37,7 @@ class JavaScriptCommandHandlerTest extends FlatSpec with Matchers{
        |      throw new Error("This will not stand");
        |    }
        |    let result = new Plan()
-       |    result.add({kind: "execution",
+       |    result.add({kind: "execute",
        |                name: "HTTP",
        |                parameters: {method: "GET", url: "http://youtube.com?search=kitty&safe=true", as: "JSON"},
        |                onSuccess: {kind: "respond", name: "Kitties"},
@@ -59,7 +60,15 @@ class JavaScriptCommandHandlerTest extends FlatSpec with Matchers{
     handler.tags.size should be(3)
     handler.intent.size should be(2)
     val plan = handler.handle(SimpleContext, SimpleParameterValues(SimpleParameterValue("name","el duderino")))
-    //TODO = validate the plan
+  }
+
+  it should "throw exceptions if required parameters are not set" in {
+    val rugArchive = TypeScriptBuilder.compileWithModel(SimpleFileBasedArtifactSource(simpleCommandHandler))
+    val handlers = JavaScriptCommandHandler.extractHandlers(rugArchive, new JavaScriptHandlerContext("XX", treeMaterializer))
+    val handler = handlers.head
+    assertThrows[MissingParametersException]{
+      handler.handle(SimpleContext, SimpleParameterValues.Empty)
+    }
   }
 }
 

@@ -1,6 +1,6 @@
 package com.atomist.rug.runtime.rugdsl
 
-import com.atomist.project.ProjectOperationArguments
+import com.atomist.param.ParameterValues
 import com.atomist.rug.RugRuntimeException
 import com.atomist.rug.kind.DefaultTypeRegistry
 import com.atomist.rug.kind.core.FileArtifactBackedMutableView
@@ -23,7 +23,7 @@ class DefaultViewFinder(typeRegistry: TypeRegistry)
                     rugAs: ArtifactSource,
                     selected: Selected,
                     context: TreeNode,
-                    poa: ProjectOperationArguments,
+                    poa: ParameterValues,
                     identifierMap: Map[String, Object]): Option[Seq[TreeNode]] = {
     try {
       findAllIn(rugAs, selected, context, poa, identifierMap)
@@ -45,7 +45,7 @@ class DefaultViewFinder(typeRegistry: TypeRegistry)
     * then identifiers in scope, then global identifiers.
     */
   def findAllIn(rugAs: ArtifactSource, selected: Selected, context: TreeNode,
-                poa: ProjectOperationArguments, identifierMap: Map[String, Object]): Option[Seq[TreeNode]] = {
+                poa: ParameterValues, identifierMap: Map[String, Object]): Option[Seq[TreeNode]] = {
 
     val fromIdentifierInScope: Option[Seq[MutableView[_]]] = identifierMap.get(selected.kind).flatMap(typ => {
       logger.debug(s"Getting type '${selected.kind}' from $typ")
@@ -106,7 +106,7 @@ class DefaultViewFinder(typeRegistry: TypeRegistry)
 
 
   def invokePredicate(rugAs: ArtifactSource,
-                      poa: ProjectOperationArguments,
+                      poa: ParameterValues,
                       identifierMap: Map[String, Object],
                       predicate: Predicate,
                       targetAlias: String,

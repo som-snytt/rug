@@ -2,19 +2,19 @@ package com.atomist.rug.tree.context.text
 
 import java.io.File
 
-import com.atomist.project.SimpleProjectOperationArguments
+import com.atomist.param.SimpleParameterValues
 import com.atomist.project.edit.SuccessfulModification
 import com.atomist.rug.runtime.js.{JavaScriptProjectEditor, JavaScriptProjectOperationFinder}
+import com.atomist.rug.ts.TypeScriptBuilder
 import com.atomist.source.file.{ClassPathArtifactSource, FileSystemArtifactSource, FileSystemArtifactSourceIdentifier}
 import org.scalatest.{FlatSpec, Matchers}
-import com.atomist.rug.ts.TypeScriptBuilder
 
 class MicrogrammarTypeScriptTest extends FlatSpec with Matchers {
 
   it should "use Microgrammar from TypeScript" in {
 
     val tsEditorResource = "com/atomist/rug/tree/context/text/MicrogrammarTypeScriptTest.ts"
-    val parameters = SimpleProjectOperationArguments.Empty
+    val parameters = SimpleParameterValues.Empty
     val target = FileSystemArtifactSource(FileSystemArtifactSourceIdentifier(new File("src/test/scala/com/atomist/rug/tree/context/text/MicrogrammarTypeScriptTest.scala")))
     val fileThatWillBeModified = "MicrogrammarTypeScriptTest.scala"
 

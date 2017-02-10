@@ -1,6 +1,6 @@
 package com.atomist.rug.runtime.js
 
-import com.atomist.project.ProjectOperationArguments
+import com.atomist.param.ParameterValues
 import com.atomist.project.archive.DefaultAtomistConfig
 import com.atomist.project.review.{ProjectReviewer, ReviewComment, ReviewResult, Severity}
 import com.atomist.rug.kind.core.ProjectMutableView
@@ -18,7 +18,7 @@ class JavaScriptProjectReviewer(
   extends JavaScriptProjectOperation(jsc, jsVar, rugAs)
     with ProjectReviewer {
 
-  override def review(targetProject: ArtifactSource, poa: ProjectOperationArguments): ReviewResult = {
+  override def review(targetProject: ArtifactSource, poa: ParameterValues): ReviewResult = {
     val (response, elapsedTime) = time {
       val pmv = new ProjectMutableView(rugAs,
         targetProject,

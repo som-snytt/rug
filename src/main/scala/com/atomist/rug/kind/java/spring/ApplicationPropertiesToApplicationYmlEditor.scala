@@ -2,8 +2,7 @@ package com.atomist.rug.kind.java.spring
 
 import _root_.java.util
 
-import com.atomist.param.{Parameter, Tag}
-import com.atomist.project.ProjectOperationArguments
+import com.atomist.param.{Parameter, ParameterValues, Tag}
 import com.atomist.project.edit._
 import com.atomist.rug.kind.java.ExtractApplicationProperties
 import com.atomist.rug.kind.java.support.JavaAssertions
@@ -23,7 +22,7 @@ object ApplicationPropertiesToApplicationYmlEditor extends ProjectEditor with La
 
   private val configExtractor = new ExtractApplicationProperties(source = ApplicationPropertiesFilePath)
 
-  override def modify(as: ArtifactSource, pmi: ProjectOperationArguments): ModificationAttempt = {
+  override def modify(as: ArtifactSource, pmi: ParameterValues): ModificationAttempt = {
     as.findFile(ApplicationPropertiesFilePath).map(f => {
       val config = configExtractor(f)
       val applicationYml: FileArtifact = StringFileArtifact(ApplicationYmlPath, toYmlString(config))

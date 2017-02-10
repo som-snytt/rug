@@ -1,7 +1,7 @@
 package com.atomist.rug.runtime.js
 
 import com.atomist.param.Tag
-import com.atomist.rug.RugRuntimeException
+import com.atomist.rug.{InvalidHandlerResultException, RugRuntimeException}
 import com.atomist.rug.kind.DefaultTypeRegistry
 import com.atomist.rug.runtime.js.interop.{JavaScriptHandlerContext, jsContextMatch, jsPathExpressionEngine, jsSafeCommittingProxy}
 import com.atomist.rug.runtime.{SystemEvent, SystemEventHandler}
@@ -69,13 +69,10 @@ class JavaScriptEventHandler(jsc: JavaScriptContext,
           jsPathExpressionEngine.wrapOne(targetNode),
           jsPathExpressionEngine.wrap(matches),
           teamId = e.teamId)
-        //TODO wrap this in safe committing proxy
-        val plan = invokeMemberFunction(jsc, handler, "handle", jsMatch(cm))
-        plan match {
-          case planScriptObject: ScriptObjectMirror =>
-            Some(new PlanBuilder().constructPlan(planScriptObject))
-          case _ =>
-            throw new RugRuntimeException(pathExpressionStr, s"Could not derive plan when handling $pathExpression")
+        invokeMemberFunction(jsc, handler, "handle", jsMatch(cm)) match {
+          case plan: ScriptObjectMirror => ConstructPlan(plan)
+          case other => throw new InvalidHandlerResultException(s"$name EventHandler returned an invalid response ($other) when handling $pathExpressionStr")
+
         }
 
       case Left(failure) =>

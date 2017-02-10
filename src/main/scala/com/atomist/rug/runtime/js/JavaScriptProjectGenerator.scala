@@ -1,13 +1,12 @@
 package com.atomist.rug.runtime.js
 
-import com.atomist.project.ProjectOperationArguments
+import com.atomist.param.ParameterValues
 import com.atomist.project.archive.DefaultAtomistConfig
 import com.atomist.project.common.InvalidParametersException
 import com.atomist.project.generate.ProjectGenerator
 import com.atomist.rug.kind.core.ProjectMutableView
 import com.atomist.source.{ArtifactSource, EmptyArtifactSource}
 import com.atomist.util.Timing._
-
 import jdk.nashorn.api.scripting.ScriptObjectMirror
 
 /**
@@ -24,7 +23,7 @@ class JavaScriptProjectGenerator(
     with ProjectGenerator {
 
   @throws(classOf[InvalidParametersException])
-  override def generate(projectName: String, poa: ProjectOperationArguments): ArtifactSource = {
+  override def generate(projectName: String, poa: ParameterValues): ArtifactSource = {
     validateParameters(poa)
     val tr = time {
       val project = new EmptyArtifactSource(projectName) + startProject

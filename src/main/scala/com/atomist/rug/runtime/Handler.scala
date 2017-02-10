@@ -1,6 +1,6 @@
 package com.atomist.rug.runtime
 
-import com.atomist.param.{Parameter, Tag}
+import com.atomist.param.{ParameterizedSupport, Tag}
 
 /**
   * Common stuff for Handlers
@@ -14,6 +14,8 @@ trait Handler {
   val description: String
 }
 
-trait ParameterizedHandler extends Handler {
-  val parameters: Seq[Parameter]
+trait ParameterizedHandler
+  extends Handler
+   with ParameterizedSupport{
+
 }

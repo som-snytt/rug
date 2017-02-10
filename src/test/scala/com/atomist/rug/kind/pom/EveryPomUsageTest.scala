@@ -1,7 +1,6 @@
 package com.atomist.rug.kind.pom
 
-import com.atomist.project.SimpleProjectOperationArguments
-import com.atomist.project.edit.SuccessfulModification
+import com.atomist.param.SimpleParameterValues
 import com.atomist.rug.DefaultRugPipeline
 import com.atomist.rug.InterpreterRugPipeline.DefaultRugArchive
 import com.atomist.rug.kind.java.JavaTypeUsageTest
@@ -27,7 +26,7 @@ class EveryPomUsageTest extends FlatSpec with Matchers {
 
 
     val result = doModification(progArtifact, as, EmptyArtifactSource(""),
-      SimpleProjectOperationArguments("", Map.empty[String,Object]))
+      SimpleParameterValues( Map.empty[String,Object]))
 
     assert(result.cachedDeltas.size === mods)
 
