@@ -4,7 +4,7 @@ import java.io.File
 
 import com.atomist.project.SimpleProjectOperationArguments
 import com.atomist.project.edit.SuccessfulModification
-import com.atomist.rug.runtime.js.{JavaScriptInvokingProjectEditor, JavaScriptOperationFinder}
+import com.atomist.rug.runtime.js.{JavaScriptProjectEditor, JavaScriptProjectOperationFinder}
 import com.atomist.source.file.{ClassPathArtifactSource, FileSystemArtifactSource, FileSystemArtifactSourceIdentifier}
 import org.scalatest.{FlatSpec, Matchers}
 import com.atomist.rug.ts.TypeScriptBuilder
@@ -24,7 +24,7 @@ class MicrogrammarTypeScriptTest extends FlatSpec with Matchers {
     val artifactSourceWithRugNpmModule = TypeScriptBuilder.compileWithModel(artifactSourceWithEditor)
 
     // get the operation out of the artifact source
-    val projectEditor = JavaScriptOperationFinder.fromJavaScriptArchive(artifactSourceWithRugNpmModule).head.asInstanceOf[JavaScriptInvokingProjectEditor]
+    val projectEditor = JavaScriptProjectOperationFinder.fromJavaScriptArchive(artifactSourceWithRugNpmModule).head.asInstanceOf[JavaScriptProjectEditor]
 
     // apply the operation
     projectEditor.modify(target, parameters) match {

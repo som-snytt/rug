@@ -131,7 +131,12 @@ trait JavaScriptUtils {
     parameter.setDefaultRef(details.get("defaultRef").asInstanceOf[String])
     val disp = details.get("displayable")
     parameter.setDisplayable(if(disp != null) disp.asInstanceOf[Boolean] else true)
-    parameter.setRequired(details.get("required").asInstanceOf[Boolean])
+
+    if(details.hasMember("required")){
+      parameter.setRequired(details.get("required").asInstanceOf[Boolean])
+    }else{
+      parameter.setRequired(true)
+    }
 
     parameter.addTags(tags(details))
 
