@@ -7,9 +7,9 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror
 import jdk.nashorn.internal.runtime.Undefined
 
 /**
-  * Constructs plans from nashorn response to a Handler/handle operation
+  * Constructs plans from Nashorn response to a Handler/handle operation
   */
-class Planner {
+class PlanBuilder {
 
   def constructPlan(jsPlan: ScriptObjectMirror): Plan = {
     val jsMessages = jsPlan.getMember("messages").asInstanceOf[ScriptObjectMirror].values()

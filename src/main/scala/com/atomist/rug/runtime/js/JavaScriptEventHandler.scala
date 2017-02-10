@@ -73,7 +73,7 @@ class JavaScriptEventHandler(jsc: JavaScriptContext,
         val plan = invokeMemberFunction(jsc, handler, "handle", jsMatch(cm))
         plan match {
           case planScriptObject: ScriptObjectMirror =>
-            Some(new Planner().constructPlan(planScriptObject))
+            Some(new PlanBuilder().constructPlan(planScriptObject))
           case _ =>
             throw new RugRuntimeException(pathExpressionStr, s"Could not derive plan when handling $pathExpression")
         }
